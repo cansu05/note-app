@@ -1,17 +1,17 @@
-# ?? Note App - Yapýþkan Not Panosu
+# ?? Note App - Firebase Notes Board
 
-Modern bir not uygulamasý. Kullanýcýlar sayfalar oluþturabilir, not ekleyebilir, notlarý sürükleyip yeniden boyutlandýrabilir ve içerikleri zengin metin olarak düzenleyebilir.
+Modern bir not uygulamasi. Kullanicilar sayfalar olusturabilir, not ekleyebilir, notlari surukleyip yeniden boyutlandirabilir ve icerikleri zengin metin olarak duzenleyebilir.
 
-## ?? Özellikler
+## ?? Ozellikler
 
-- Çoklu sayfa ve alt sayfa (hiyerarþik yapý)
-- Sürükle-býrak not yerleþimi
-- Notlarý yeniden boyutlandýrma
-- Zengin metin düzenleme (kalýn, italik, liste stilleri)
-- Yakýnlaþtýrma/Uzaklaþtýrma (zoom)
-- Renk seçimiyle not oluþturma
-- LocalStorage ile kalýcý veri saklama
-- Servis + repository ayrýmýyla ölçeklenebilir mimari
+- Coklu sayfa ve alt sayfa (hiyerarsik yapi)
+- Surukle-birak not yerlesimi
+- Notlari yeniden boyutlandirma
+- Zengin metin duzenleme (kalin, italik, liste stilleri)
+- Yakinlastirma/Uzaklastirma (zoom)
+- Renk secimiyle not olusturma
+- Firebase tabanli veri saklama
+- Servis + repository ayrimiyla olceklenebilir mimari
 
 ## ?? Teknolojiler
 
@@ -19,9 +19,9 @@ Modern bir not uygulamasý. Kullanýcýlar sayfalar oluþturabilir, not ekleyebilir,
 - Vite 5
 - JavaScript (ES Modules)
 - CSS
-- LocalStorage
+- Firebase
 
-## ?? Proje Yapýsý
+## ?? Proje Yapisi
 
 ```txt
 src/
@@ -48,17 +48,10 @@ npm run build
 npm run preview
 ```
 
-## ?? GitHub'a Gönderme
+## ?? GitHub'a Gonderme
 
 ```bash
-git init
 git add .
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin <GITHUB_REPO_URL>
-git push -u origin main
+git commit -m "docs: update README for firebase"
+git push
 ```
-
-## ?? Not
-
-Repository katmaný soyutlandýðý için ileride `LocalNoteRepository` yerine örneðin Firebase tabanlý bir repository kolayca eklenebilir.
