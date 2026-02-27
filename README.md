@@ -1,4 +1,4 @@
-# Note App - Firebase Notes Board
+# Note App - Notes Board
 
 Production odakli, cok sayfali bir not/canvas uygulamasi.  
 Amac, hiyerarsik bilgi mimarisi (page/subpage) ile serbest yerlesimli not duzenlemeyi ayni deneyimde birlestirmek.
