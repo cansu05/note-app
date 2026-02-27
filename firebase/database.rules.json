@@ -1,0 +1,22 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "notes": {
+          "$noteId": {
+            ".validate": "newData.hasChildren(['id','createdAt','updatedAt'])"
+          }
+        },
+        "pages": {
+          "$pageId": {
+            ".validate": "newData.hasChildren(['id','name','createdAt','updatedAt'])"
+          }
+        }
+      }
+    },
+    ".read": false,
+    ".write": false
+  }
+}

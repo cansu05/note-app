@@ -1,61 +1,48 @@
-import { useState } from "react";
-import {
-  createUserWithEmailAndPassword,
-  GithubAuthProvider,
-  GoogleAuthProvider,
-  signInWithEmailAndPassword,
-  signInWithPopup
-} from "firebase/auth";
 import { FaGithub, FaGoogle } from "react-icons/fa";
-import { auth } from "../../lib/firebase";
+import { useAuthForm } from "./hooks/useAuthForm";
 
 export const AuthPage = () => {
-  const [mode, setMode] = useState("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const signInWithProvider = async (providerName) => {
-    setError("");
-    setLoading(true);
-    try {
-      const provider =
-        providerName === "google" ? new GoogleAuthProvider() : new GithubAuthProvider();
-      await signInWithPopup(auth, provider);
-    } catch (err) {
-      setError(err?.message || "Sosyal giriş başarısız.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const submit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      if (mode === "register") {
-        await createUserWithEmailAndPassword(auth, email.trim(), password);
-      } else {
-        await signInWithEmailAndPassword(auth, email.trim(), password);
-      }
-    } catch (err) {
-      setError(err?.message || "Giriş işlemi başarısız.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    mode,
+    fullName,
+    setFullName,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    error,
+    info,
+    loading,
+    switchMode,
+    signInWithProvider,
+    submit,
+    sendReset
+  } = useAuthForm();
 
   return (
     <main className="auth-shell">
-      <form className="auth-card" onSubmit={submit}>
+      <form className="auth-card" onSubmit={submit} noValidate>
         <span className="auth-pill">Güvenli Çalışma Alanı</span>
         <h1>Note App</h1>
         <p className="auth-subtitle">
           {mode === "register" ? "Yeni hesap oluştur" : "Hesabına giriş yap"}
         </p>
+
+        {mode === "register" ? (
+          <>
+            <label className="auth-label" htmlFor="fullName">
+              Ad Soyad
+            </label>
+            <input
+              id="fullName"
+              type="text"
+              className="auth-input"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              autoComplete="name"
+            />
+          </>
+        ) : null}
 
         <label className="auth-label" htmlFor="email">
           E-posta
@@ -66,7 +53,6 @@ export const AuthPage = () => {
           className="auth-input"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          required
           autoComplete="email"
         />
 
@@ -79,20 +65,37 @@ export const AuthPage = () => {
           className="auth-input"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          required
-          minLength={6}
           autoComplete={mode === "register" ? "new-password" : "current-password"}
         />
 
-        {error ? <p className="auth-error">{error}</p> : null}
+        {error ? (
+          <p className="auth-error" role="alert" aria-live="polite">
+            <span className="auth-error-icon" aria-hidden="true">!</span>
+            <span>{error}</span>
+          </p>
+        ) : null}
+
+        {info ? (
+          <p className="auth-info" role="status" aria-live="polite">
+            <span className="auth-info-icon" aria-hidden="true">i</span>
+            <span>{info}</span>
+          </p>
+        ) : null}
 
         <button type="submit" className="auth-submit" disabled={loading}>
-          {loading
-            ? "Bekleniyor..."
-            : mode === "register"
-              ? "Kayıt Ol"
-              : "Giriş Yap"}
+          {loading ? "Bekleniyor..." : mode === "register" ? "Kayıt Ol" : "Giriş Yap"}
         </button>
+
+        {mode === "login" ? (
+          <button
+            type="button"
+            className="auth-link-btn"
+            onClick={sendReset}
+            disabled={loading}
+          >
+            Şifremi unuttum
+          </button>
+        ) : null}
 
         <div className="auth-divider">veya</div>
         <div className="auth-socials">
@@ -120,12 +123,7 @@ export const AuthPage = () => {
           </button>
         </div>
 
-        <button
-          type="button"
-          className="auth-switch"
-          onClick={() => setMode((prev) => (prev === "register" ? "login" : "register"))}
-          disabled={loading}
-        >
+        <button type="button" className="auth-switch" onClick={switchMode} disabled={loading}>
           {mode === "register"
             ? "Zaten hesabım var, giriş yap"
             : "Hesabım yok, kayıt ol"}

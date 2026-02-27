@@ -1,287 +1,111 @@
-import { useMemo, useState } from "react";
 import { ActivePagePanel } from "./components/ActivePagePanel";
 import { ConfirmModal } from "./components/ConfirmModal";
 import { CreatePageModal } from "./components/CreatePageModal";
-import { NoteCard } from "./components/NoteCard";
+import { NotesBoardCanvas } from "./components/NotesBoardCanvas";
 import { NotesSidebar } from "./components/NotesSidebar";
 import { NotesToolbar } from "./components/NotesToolbar";
 import { useNotesBoard } from "./hooks/useNotesBoard";
+import { useNotesPageController } from "./hooks/useNotesPageController";
+import { NOTES_UI_ERRORS } from "./notesMessages";
 
 export const NotesPage = () => {
-  const MIN_ZOOM = 0.2;
-  const MAX_ZOOM = 1.8;
-  const ZOOM_STEP = 0.1;
-  const [uiError, setUiError] = useState("");
-  const [confirmState, setConfirmState] = useState({
-    isOpen: false,
-    title: "",
-    message: "",
-    confirmText: "Sil",
-    onConfirm: null
+  const board = useNotesBoard();
+  const activePage = board.pages.find((page) => page.id === board.activePageId) ?? null;
+
+  const controller = useNotesPageController({
+    notes: board.notes,
+    boardRef: board.boardRef,
+    zoomLevel: board.zoomLevel,
+    setZoomLevel: board.setZoomLevel,
+    createNote: board.createNote,
+    createNewPage: board.createNewPage,
+    renamePage: board.renamePage,
+    deletePage: board.deletePage
   });
-  const [createPageState, setCreatePageState] = useState({
-    isOpen: false,
-    draftName: "",
-    parentPageId: null
-  });
-
-  const {
-    notes,
-    pages,
-    activePageId,
-    selectPage,
-    createNewPage,
-    renamePage,
-    deletePage,
-    colors,
-    activeColor,
-    setActiveColor,
-    selectedId,
-    setSelectedId,
-    zoomLevel,
-    setZoomLevel,
-    bringNoteToFront,
-    boardRef,
-    createNote,
-    removeNote,
-    updateNote,
-    moveNote,
-    commitNotePosition,
-    queueNoteResize
-  } = useNotesBoard();
-
-  const activePage = pages.find((page) => page.id === activePageId) ?? null;
-
-  const openConfirm = ({ title, message, confirmText = "Sil", onConfirm }) => {
-    setConfirmState({
-      isOpen: true,
-      title,
-      message,
-      confirmText,
-      onConfirm
-    });
-  };
-
-  const closeConfirm = () => {
-    setConfirmState((prev) => ({ ...prev, isOpen: false, onConfirm: null }));
-  };
-
-  const openCreatePage = (parentPageId = null) => {
-    setCreatePageState({ isOpen: true, draftName: "", parentPageId });
-  };
-
-  const closeCreatePage = () => {
-    setCreatePageState({ isOpen: false, draftName: "", parentPageId: null });
-  };
-
-  const submitCreatePage = async () => {
-    try {
-      await createNewPage(createPageState.draftName, createPageState.parentPageId);
-      setUiError("");
-      closeCreatePage();
-    } catch {
-      setUiError("Sayfa oluşturulamadı. Lütfen tekrar dene.");
-    }
-  };
-
-  const handleCreateNote = async () => {
-    try {
-      await createNote();
-      setUiError("");
-    } catch {
-      setUiError("Not oluşturulamadı. Lütfen tekrar dene.");
-    }
-  };
-
-  const handleCreateModel = async () => {
-    try {
-      await createNote({ kind: "model" });
-      setUiError("");
-    } catch {
-      setUiError("Model oluşturulamadı. Lütfen tekrar dene.");
-    }
-  };
-
-  const handleZoomIn = () => {
-    setZoomLevel((prev) => Math.min(MAX_ZOOM, Number((prev + ZOOM_STEP).toFixed(2))));
-  };
-
-  const handleZoomOut = () => {
-    setZoomLevel((prev) => Math.max(MIN_ZOOM, Number((prev - ZOOM_STEP).toFixed(2))));
-  };
-
-  const handleZoomReset = () => {
-    setZoomLevel(1);
-  };
-
-  const boardStage = useMemo(() => {
-    const viewport = boardRef.current;
-    const viewportWidth = viewport?.clientWidth ?? 1200;
-    const viewportHeight = viewport?.clientHeight ?? 760;
-    const padding = 140;
-
-    const maxRight = notes.reduce(
-      (max, note) => Math.max(max, (note.x ?? 0) + (note.width ?? 0)),
-      0
-    );
-    const maxBottom = notes.reduce(
-      (max, note) => Math.max(max, (note.y ?? 0) + (note.height ?? 0)),
-      0
-    );
-
-    const unscaledWidth = Math.max(viewportWidth + padding, maxRight + padding);
-    const unscaledHeight = Math.max(viewportHeight + padding, maxBottom + padding);
-
-    return {
-      stageWidth: Math.ceil(unscaledWidth * zoomLevel),
-      stageHeight: Math.ceil(unscaledHeight * zoomLevel),
-      unscaledWidth: Math.ceil(unscaledWidth),
-      unscaledHeight: Math.ceil(unscaledHeight)
-    };
-  }, [boardRef, notes, zoomLevel]);
 
   return (
     <main className="app-shell">
-      {uiError ? <p className="ui-error-banner">{uiError}</p> : null}
+      {controller.uiError ? <p className="ui-error-banner">{controller.uiError}</p> : null}
 
       <NotesToolbar
-        colors={colors}
-        activeColor={activeColor}
-        setActiveColor={setActiveColor}
-        createNote={handleCreateNote}
-        createModel={handleCreateModel}
-        zoomLevel={zoomLevel}
-        onZoomIn={handleZoomIn}
-        onZoomOut={handleZoomOut}
-        onZoomReset={handleZoomReset}
+        colors={board.colors}
+        activeColor={board.activeColor}
+        setActiveColor={board.setActiveColor}
+        createNote={controller.handleCreateNote}
+        createModel={controller.handleCreateModel}
+        zoomLevel={board.zoomLevel}
+        onZoomIn={controller.handleZoomIn}
+        onZoomOut={controller.handleZoomOut}
+        onZoomReset={controller.handleZoomReset}
       />
 
       <section className="workspace">
         <NotesSidebar
-          pages={pages}
-          activePageId={activePageId}
-          selectPage={selectPage}
-          onRequestCreatePage={openCreatePage}
-          onRequestCreateSubPage={(parentId) => openCreatePage(parentId)}
+          pages={board.pages}
+          activePageId={board.activePageId}
+          selectPage={board.selectPage}
+          onRequestCreatePage={controller.openCreatePage}
+          onRequestCreateSubPage={controller.openCreatePage}
         />
 
         <section className="board-column">
           <ActivePagePanel
             activePage={activePage}
-            renamePage={async (id, nextName) => {
-              try {
-                await renamePage(id, nextName);
-                setUiError("");
-              } catch {
-                setUiError("Sayfa güncellenemedi. Lütfen tekrar dene.");
-              }
-            }}
-            onRequestDelete={(page) =>
-              openConfirm({
-                title: "Sayfayı Sil",
-                message: `"${page.name}" sayfası, alt sayfaları ve içlerindeki tüm notlar silinecek.`,
-                confirmText: "Sayfayı Sil",
-                onConfirm: async () => {
-                  await deletePage(page.id);
-                  closeConfirm();
-                }
-              })
-            }
+            renamePage={controller.handleRenamePage}
+            onRequestDelete={controller.requestDeletePage}
           />
 
-          <section className="board" ref={boardRef} onClick={() => setSelectedId(null)}>
-            <div
-              className="board-zoom-stage"
-              style={{ width: boardStage.stageWidth, height: boardStage.stageHeight }}
-            >
-              <div
-                className="board-zoom"
-                style={{
-                  width: boardStage.unscaledWidth,
-                  height: boardStage.unscaledHeight,
-                  transform: `scale(${zoomLevel})`
-                }}
-              >
-              {notes.length === 0 ? (
-                <p className="empty-board">Bu sayfada not yok. + Not Ekle ile başla.</p>
-              ) : null}
-
-              {notes.map((note) => (
-                <NoteCard
-                  key={note.id}
-                  note={note}
-                  isSelected={selectedId === note.id}
-                  onSelect={() => bringNoteToFront(note.id)}
-                  onDrag={(dx, dy) => moveNote(note.id, dx / zoomLevel, dy / zoomLevel)}
-                  onDragEnd={async () => {
-                    try {
-                      await commitNotePosition(note.id);
-                      setUiError("");
-                    } catch {
-                      setUiError("Not konumu kaydedilemedi. Lütfen tekrar dene.");
-                    }
-                  }}
-                  onSave={async (changes) => {
-                    try {
-                      await updateNote(note.id, changes);
-                      setUiError("");
-                    } catch {
-                      setUiError("Not kaydedilemedi. Lütfen tekrar dene.");
-                      throw new Error("Note save failed");
-                    }
-                  }}
-                  onResize={(size) => queueNoteResize(note.id, size)}
-                  onDelete={() =>
-                    openConfirm({
-                      title: "Notu Sil",
-                      message: `"${note.title || "Yeni Not"}" notu silinecek.`,
-                      confirmText: "Notu Sil",
-                      onConfirm: async () => {
-                        await removeNote(note.id);
-                        closeConfirm();
-                      }
-                    })
-                  }
-                  boardRef={boardRef}
-                />
-              ))}
-              </div>
-            </div>
-          </section>
+          <NotesBoardCanvas
+            notes={board.notes}
+            selectedId={board.selectedId}
+            boardRef={board.boardRef}
+            boardStage={controller.boardStage}
+            zoomLevel={board.zoomLevel}
+            setSelectedId={board.setSelectedId}
+            bringNoteToFront={board.bringNoteToFront}
+            moveNote={board.moveNote}
+            commitNotePosition={board.commitNotePosition}
+            updateNote={board.updateNote}
+            queueNoteResize={board.queueNoteResize}
+            openConfirm={controller.openConfirm}
+            closeConfirm={controller.closeConfirm}
+            removeNote={board.removeNote}
+            setUiError={controller.setUiError}
+          />
         </section>
       </section>
 
       <CreatePageModal
-        isOpen={createPageState.isOpen}
-        draftName={createPageState.draftName}
-        parentPageId={createPageState.parentPageId}
-        pages={pages}
+        isOpen={controller.createPageState.isOpen}
+        draftName={controller.createPageState.draftName}
+        parentPageId={controller.createPageState.parentPageId}
+        pages={board.pages}
         onChangeName={(value) =>
-          setCreatePageState((prev) => ({ ...prev, draftName: value }))
+          controller.setCreatePageState((prev) => ({ ...prev, draftName: value }))
         }
         onChangeParentPage={(value) =>
-          setCreatePageState((prev) => ({ ...prev, parentPageId: value }))
+          controller.setCreatePageState((prev) => ({ ...prev, parentPageId: value }))
         }
-        onCancel={closeCreatePage}
-        onCreate={submitCreatePage}
+        onCancel={controller.closeCreatePage}
+        onCreate={controller.submitCreatePage}
       />
 
       <ConfirmModal
-        isOpen={confirmState.isOpen}
-        title={confirmState.title}
-        message={confirmState.message}
-        confirmText={confirmState.confirmText}
-        onCancel={closeConfirm}
+        isOpen={controller.confirmState.isOpen}
+        title={controller.confirmState.title}
+        message={controller.confirmState.message}
+        confirmText={controller.confirmState.confirmText}
+        onCancel={controller.closeConfirm}
         onConfirm={async () => {
           try {
-            if (confirmState.onConfirm) {
-              await confirmState.onConfirm();
+            if (controller.confirmState.onConfirm) {
+              await controller.confirmState.onConfirm();
             } else {
-              closeConfirm();
+              controller.closeConfirm();
             }
-            setUiError("");
+            controller.setUiError("");
           } catch {
-            setUiError("İşlem tamamlanamadı. Lütfen tekrar dene.");
+            controller.setUiError(NOTES_UI_ERRORS.generic);
           }
         }}
       />

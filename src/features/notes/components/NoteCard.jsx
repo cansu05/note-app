@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { getAutoSize } from "../utils/noteSizing";
 import { htmlToText, normalizeHtml } from "../utils/richText";
 import { useNoteEditor } from "../hooks/useNoteEditor";
 
-export const NoteCard = ({
+export const NoteCard = memo(({
   note,
   isSelected,
   onSelect,
@@ -80,7 +80,7 @@ export const NoteCard = ({
       y: e.clientY
     };
     e.currentTarget.setPointerCapture(e.pointerId);
-    onSelect();
+    onSelect(note.id);
   };
 
   const handlePointerMove = (e) => {
@@ -91,12 +91,12 @@ export const NoteCard = ({
     dragState.current.x = e.clientX;
     dragState.current.y = e.clientY;
 
-    onDrag(dx, dy);
+    onDrag(note.id, dx, dy);
   };
 
   const handlePointerUp = (e) => {
     if (dragState.current.dragging) {
-      onDragEnd();
+      onDragEnd(note.id);
     }
 
     dragState.current.dragging = false;
@@ -114,6 +114,7 @@ export const NoteCard = ({
 
     try {
       await onSave({
+        id: note.id,
         title: isModel ? "" : draftTitle.trim() || "Yeni Not",
         content: normalizedContent,
         ...(isModel ? { height: autoSize.height } : autoSize),
@@ -175,7 +176,7 @@ export const NoteCard = ({
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsEditing(true);
-                    onSelect();
+                    onSelect(note.id);
                   }}
                 >
                   Düzenle
@@ -197,7 +198,7 @@ export const NoteCard = ({
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDelete();
+                  onDelete(note);
                 }}
               >
                 Sil
@@ -249,4 +250,4 @@ export const NoteCard = ({
 
     </article>
   );
-};
+});

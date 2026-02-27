@@ -1,0 +1,55 @@
+:root {
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  --bg1: #e8dfd5;
+  --bg2: #d4c6b7;
+  --ink: #3f3a35;
+  --btn-soft: #f4c7d0;
+  --btn-soft-hover: #edb7c3;
+  --btn-olive: #9faa74;
+  --btn-olive-hover: #8f9b66;
+  --btn-earth: #d7d0b3;
+  --btn-earth-hover: #c8be9d;
+  --btn-text-dark: #2f2a25;
+  --btn-text-light: #fffdf9;
+}
+
+html {
+  height: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  height: 100vh;
+  margin: 0;
+  color: var(--ink);
+  background: radial-gradient(circle at 20% 10%, #f0e8de 0%, var(--bg1) 35%, var(--bg2) 100%);
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+}
+
+.session-bar {
+  height: 42px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.7);
+  border-bottom: 1px solid rgba(77, 67, 59, 0.2);
+  font-weight: 700;
+}
+
+.session-bar button {
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-weight: 700;
+  cursor: pointer;
+  background: #f0ddcc;
+  color: #3d342d;
+}
