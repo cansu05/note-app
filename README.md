@@ -1,26 +1,84 @@
-﻿# Note App - Firebase Notes Board
+# Note App - Firebase Notes Board
 
-Modern ve ölçeklenebilir bir not uygulaması.
-Kullanıcılar çoklu sayfa/alt sayfa oluşturabilir, notları sürükleyip yeniden boyutlandırabilir ve zengin metin olarak düzenleyebilir.
+Production odakli, cok sayfali bir not/canvas uygulamasi.  
+Amac, hiyerarsik bilgi mimarisi (page/subpage) ile serbest yerlesimli not duzenlemeyi ayni deneyimde birlestirmek.
 
-## Özellikler
+## One Cikan Ozellikler
 
-- Çoklu sayfa ve alt sayfa (hiyerarşik yapı)
-- Sürükle-bırak not yerleşimi
-- Not yeniden boyutlandırma
-- Zengin metin düzenleme (kalın, italik, liste stilleri)
-- Zoom kontrolleri
-- Renk seçimi ile not oluşturma
-- Firebase Realtime Database ile kalıcı veri
-- Servis + repository tabanlı mimari
+- Hiyerarsik sayfa agaci
+  - Root page + sinirsiz subpage
+  - Arrow ile ac/kapa
+  - Drag-and-drop ile page tasima (`before`, `after`, `inside`)
+- Canvas not yonetimi
+  - Tekli/coklu secim (Shift, Ctrl/Cmd)
+  - Grup surukleme (secili notlar birlikte hareket eder)
+  - Yeniden boyutlandirma ve otomatik icerik olcumleme
+  - Model/not tipleri (farkli varsayilan davranislar)
+- Kisayol odakli kullanim
+  - `Ctrl/Cmd + C` / `Ctrl/Cmd + V` (coklu kopyala-yapistir)
+  - `Delete/Backspace` (tekli/coklu silme)
+  - `Space + drag` ile hand-pan (canvas icinde gezinme)
+- Zengin metin (rich text)
+  - Kalin/italik/liste stilleri
+  - HTML sanitize + normalize pipeline
+- Tema ve gorunum
+  - Ust palette hizli renk atama
+  - Secili notlara toplu renk uygulama
+  - Zoom in/out/reset
+
+## Mimari
+
+- Feature-first yapi: `src/features/notes/*`
+- State katmanlari:
+  - `zustand` UI store (`useBoardUiStore`)
+  - `zustand` data store (`useBoardDataStore`)
+- Domain/Service/Repository ayrimi:
+  - `domain/*`: entity/default degerler
+  - `services/*`: uygulama kurallari
+  - `repositories/*`: Firebase IO
+- Hook tabanli orchestration:
+  - `useBoardData`, `useBoardInteractions`, `useBoardKeyboardShortcuts`, `useNotesPageController`
+
+## Performans Notlari
+
+- Page move islemlerinde batch update (`updateMany`) kullanilir.
+- Coklu not kopyalama paralel calisir (`Promise.all`).
+- Keyboard listener stabil tutulur (gereksiz re-bind azaltilmistir).
+- Pan davranisi render maliyetini dusurecek sekilde optimize edilmistir.
+
+## Guvenlik
+
+- Rich text girisleri sanitize edilir (`sanitizeRichHtml`).
+- Firebase Realtime Database kurallari:
+  - user isolation (`auth.uid === $uid`)
+  - id/path tutarliligi
+  - kritik alanlarda tip ve sinir dogrulamalari
+- `firebase/database.rules.json` dosyasi source control altinda tutulur.
+
+## Test ve Kalite
+
+- Unit/component testler: Vitest + Testing Library
+- Mevcut kapsam:
+  - store davranislari
+  - page-tree move helper
+  - keyboard shortcuts
+  - interaction rollback
+  - sidebar DnD
+  - rich text sanitize
+
+```bash
+npm run lint
+npm run test
+npm run build
+```
 
 ## Teknolojiler
 
 - React 18
 - Vite 5
-- JavaScript (ES Modules)
-- CSS
-- Firebase Realtime Database
+- Zustand
+- Firebase Realtime Database + Auth
+- Vitest + Testing Library
 
 ## Kurulum
 
@@ -29,37 +87,13 @@ npm install
 npm run dev
 ```
 
-`.env` dosyası oluşturup `.env.example` içindeki değişkenleri doldur.
-
-## Kalite Komutları
-
-```bash
-npm run lint
-npm run typecheck
-npm run test
-npx playwright install
-npm run test:e2e
-npm run build
-```
+`.env` dosyasini `.env.example` baz alarak `VITE_FIREBASE_*` degiskenleri ile doldur.
 
 ## Firebase Kurulumu
 
-1. Firebase Console'da proje oluştur.
-2. Realtime Database'i aktif et ve yayın öncesi kuralları `firebase/database.rules.json` ile aynı olacak şekilde sıkılaştır.
-3. Authentication > Sign-in method içinden `Email/Password`, `Google` ve `GitHub` provider'larını aç.
-4. GitHub provider için Firebase'in istediği callback URL'yi GitHub OAuth App ayarlarına ekle.
-5. Web app ekle ve config değerlerini al.
-6. Config değerlerini `.env` dosyasına `VITE_FIREBASE_*` değişkenleri olarak ekle.
-
-## Güvenlik Notu
-
-- Realtime Database kurallarını sürüm kontrollü tutmak için `firebase/database.rules.json` dosyasını kullan.
-- Yayın ortamında `test mode` kullanma.
-
-## GitHub
-
-```bash
-git add .
-git commit -m "feat: improve architecture and quality gates"
-git push
-```
+1. Firebase projesi olustur.
+2. Realtime Database'i aktif et.
+3. Auth provider'larini ac (`Email/Password`, `Google`, `GitHub`).
+4. Gerekli OAuth callback URL'lerini provider tarafinda tanimla.
+5. Web app config'ini `.env` icine `VITE_FIREBASE_*` olarak ekle.
+6. Publish oncesi database rules dosyasini deploy et.
