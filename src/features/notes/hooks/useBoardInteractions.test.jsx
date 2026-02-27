@@ -128,4 +128,30 @@ describe("useBoardInteractions", () => {
       expect(after).toEqual(before);
     });
   });
+
+  it("selects intersecting notes with marquee selection", async () => {
+    const { result } = renderHook(() => useHarness());
+
+    act(() => {
+      result.current.startMarqueeSelection({ x: 0, y: 0 });
+      result.current.updateMarqueeSelection({ x: 220, y: 120 });
+    });
+
+    await waitFor(() => {
+      expect(useBoardUiStore.getState().selectedIds).toEqual(["n1", "n2"]);
+      expect(result.current.selectionRect).toEqual({
+        left: 0,
+        top: 0,
+        width: 220,
+        height: 120
+      });
+    });
+
+    act(() => {
+      const { moved } = result.current.endMarqueeSelection();
+      expect(moved).toBe(true);
+    });
+
+    expect(result.current.selectionRect).toBeNull();
+  });
 });

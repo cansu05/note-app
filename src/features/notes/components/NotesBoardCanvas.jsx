@@ -25,6 +25,11 @@ export const NotesBoardCanvas = memo(({
   duplicateNotes,
   setSelectedIds,
   queueNoteResize,
+  selectionRect,
+  startMarqueeSelection,
+  updateMarqueeSelection,
+  endMarqueeSelection,
+  cancelMarqueeSelection,
   openConfirm,
   closeConfirm,
   removeNote,
@@ -35,6 +40,7 @@ export const NotesBoardCanvas = memo(({
   const [isSpacePressed, setIsSpacePressed] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
   const panStateRef = useRef({ active: false, x: 0, y: 0 });
+  const suppressClickRef = useRef(false);
   const panOffsetRef = useRef({ x: 0, y: 0 });
   const zoomLevelRef = useRef(zoomLevel);
   const frameRef = useRef(null);
@@ -46,6 +52,19 @@ export const NotesBoardCanvas = memo(({
     const { x, y } = panOffsetRef.current;
     node.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${zoomLevelRef.current})`;
   }, []);
+
+  const toBoardPoint = useCallback(
+    (event) => {
+      const board = boardRef.current;
+      if (!board) return { x: 0, y: 0 };
+      const rect = board.getBoundingClientRect();
+      return {
+        x: (event.clientX - rect.left - panOffsetRef.current.x) / zoomLevelRef.current,
+        y: (event.clientY - rect.top - panOffsetRef.current.y) / zoomLevelRef.current
+      };
+    },
+    [boardRef]
+  );
 
   useEffect(() => {
     zoomLevelRef.current = zoomLevel;
@@ -165,48 +184,89 @@ export const NotesBoardCanvas = memo(({
 
   const handleBoardPointerDown = useCallback(
     (event) => {
-      if (!isSpacePressed || event.button !== 0) return;
-      panStateRef.current = { active: true, x: event.clientX, y: event.clientY };
-      setIsPanning(true);
+      if (event.button !== 0) return;
+      const isNoteTarget = Boolean(event.target?.closest?.(".note-card"));
+      if (isSpacePressed) {
+        panStateRef.current = { active: true, x: event.clientX, y: event.clientY };
+        setIsPanning(true);
+        event.currentTarget.setPointerCapture(event.pointerId);
+        return;
+      }
+      if (isNoteTarget) return;
+
+      const start = toBoardPoint(event);
+      startMarqueeSelection(start);
       event.currentTarget.setPointerCapture(event.pointerId);
     },
-    [isSpacePressed]
+    [isSpacePressed, startMarqueeSelection, toBoardPoint]
   );
 
   const handleBoardPointerMove = useCallback((event) => {
-    if (!panStateRef.current.active) return;
-    const dx = event.clientX - panStateRef.current.x;
-    const dy = event.clientY - panStateRef.current.y;
-    panStateRef.current.x = event.clientX;
-    panStateRef.current.y = event.clientY;
-    panOffsetRef.current = {
-      x: panOffsetRef.current.x + dx,
-      y: panOffsetRef.current.y + dy
-    };
-    if (frameRef.current != null) return;
-    frameRef.current = requestAnimationFrame(() => {
-      frameRef.current = null;
-      applyTransform();
-    });
-  }, [applyTransform]);
+    if (panStateRef.current.active) {
+      const dx = event.clientX - panStateRef.current.x;
+      const dy = event.clientY - panStateRef.current.y;
+      panStateRef.current.x = event.clientX;
+      panStateRef.current.y = event.clientY;
+      panOffsetRef.current = {
+        x: panOffsetRef.current.x + dx,
+        y: panOffsetRef.current.y + dy
+      };
+      if (frameRef.current != null) return;
+      frameRef.current = requestAnimationFrame(() => {
+        frameRef.current = null;
+        applyTransform();
+      });
+      return;
+    }
+
+    if (!selectionRect) return;
+    const point = toBoardPoint(event);
+    updateMarqueeSelection(point);
+  }, [applyTransform, selectionRect, toBoardPoint, updateMarqueeSelection]);
 
   const handleBoardPointerUp = useCallback((event) => {
-    if (!panStateRef.current.active) return;
+    if (panStateRef.current.active) {
+      panStateRef.current.active = false;
+      setIsPanning(false);
+      if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      return;
+    }
+
+    if (selectionRect) {
+      suppressClickRef.current = endMarqueeSelection().moved;
+      if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+    }
+  }, [endMarqueeSelection, selectionRect]);
+
+  const handleBoardClick = useCallback(() => {
+    if (suppressClickRef.current) {
+      suppressClickRef.current = false;
+      return;
+    }
+    if (!selectionRect) {
+      clearSelection();
+    }
+  }, [clearSelection, selectionRect]);
+
+  const handleBoardPointerCancel = useCallback(() => {
     panStateRef.current.active = false;
     setIsPanning(false);
-    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-  }, []);
+    cancelMarqueeSelection();
+  }, [cancelMarqueeSelection]);
 
   return (
     <section
-      className={`board ${isSpacePressed ? "pan-ready" : ""} ${isPanning ? "panning" : ""}`}
+      className={`board ${isSpacePressed ? "pan-ready" : ""} ${isPanning ? "panning" : ""} ${selectionRect ? "selecting" : ""}`}
       ref={boardRef}
-      onClick={clearSelection}
+      onClick={handleBoardClick}
       onPointerDown={handleBoardPointerDown}
       onPointerMove={handleBoardPointerMove}
       onPointerUp={handleBoardPointerUp}
+      onPointerCancel={handleBoardPointerCancel}
     >
       <div className="board-zoom-stage">
         <div
@@ -233,6 +293,17 @@ export const NotesBoardCanvas = memo(({
               boardRef={boardRef}
             />
           ))}
+          {selectionRect ? (
+            <div
+              className="selection-marquee"
+              style={{
+                left: selectionRect.left,
+                top: selectionRect.top,
+                width: selectionRect.width,
+                height: selectionRect.height
+              }}
+            />
+          ) : null}
         </div>
       </div>
     </section>

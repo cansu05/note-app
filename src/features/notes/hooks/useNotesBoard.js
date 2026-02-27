@@ -62,6 +62,11 @@ export const useNotesBoard = () => {
     updateNote: data.updateNote,
     moveNote: interactions.moveNote,
     commitNotePosition: interactions.commitNotePosition,
-    queueNoteResize: interactions.queueNoteResize
+    queueNoteResize: interactions.queueNoteResize,
+    selectionRect: interactions.selectionRect,
+    startMarqueeSelection: interactions.startMarqueeSelection,
+    updateMarqueeSelection: interactions.updateMarqueeSelection,
+    endMarqueeSelection: interactions.endMarqueeSelection,
+    cancelMarqueeSelection: interactions.cancelMarqueeSelection
   };
 };

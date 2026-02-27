@@ -10,6 +10,7 @@ const createDataTransfer = () => ({
 
 const basePages = [
   { id: "a", name: "A", parentId: null, sortOrder: 1 },
+  { id: "a1", name: "A-1", parentId: "a", sortOrder: 1 },
   { id: "b", name: "B", parentId: null, sortOrder: 2 }
 ];
 
@@ -30,6 +31,17 @@ const setup = (onMovePage = vi.fn().mockResolvedValue(undefined)) => {
 };
 
 describe("NotesSidebar DnD", () => {
+  it("toggles subpages with arrow button", () => {
+    setup();
+    expect(screen.getByRole("button", { name: "A-1" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText("A alt sayfalari kapat"));
+    expect(screen.queryByRole("button", { name: "A-1" })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText("A alt sayfalari ac"));
+    expect(screen.getByRole("button", { name: "A-1" })).toBeInTheDocument();
+  });
+
   it("calls move with inside mode when dropping in middle", async () => {
     const { onMovePage } = setup();
     const source = screen.getByRole("button", { name: "A" });

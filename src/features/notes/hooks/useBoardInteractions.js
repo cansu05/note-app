@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { clamp } from "../utils/noteSizing";
 import { useBoardUiStore } from "../store/useBoardUiStore";
 
@@ -14,6 +14,8 @@ export const useBoardInteractions = ({
   const pendingPositionRef = useRef(new Map());
   const pendingResizeRef = useRef(new Map());
   const resizeFrameRef = useRef(new Map());
+  const marqueeRef = useRef({ active: false, startX: 0, startY: 0, moved: false });
+  const [selectionRect, setSelectionRect] = useState(null);
   const selectedId = useBoardUiStore((state) => state.selectedId);
   const setSelectedId = useBoardUiStore((state) => state.setSelectedId);
   const selectedIds = useBoardUiStore((state) => state.selectedIds);
@@ -219,6 +221,71 @@ export const useBoardInteractions = ({
     [notesRef, setNotes]
   );
 
+  const startMarqueeSelection = useCallback((point) => {
+    marqueeRef.current = {
+      active: true,
+      startX: point.x,
+      startY: point.y,
+      moved: false
+    };
+    setSelectionRect({ left: point.x, top: point.y, width: 0, height: 0 });
+  }, []);
+
+  const updateMarqueeSelection = useCallback(
+    (point) => {
+      if (!marqueeRef.current.active) return;
+      const dx = Math.abs(point.x - marqueeRef.current.startX);
+      const dy = Math.abs(point.y - marqueeRef.current.startY);
+      marqueeRef.current.moved = marqueeRef.current.moved || dx > 2 || dy > 2;
+
+      const left = Math.min(marqueeRef.current.startX, point.x);
+      const top = Math.min(marqueeRef.current.startY, point.y);
+      const right = Math.max(marqueeRef.current.startX, point.x);
+      const bottom = Math.max(marqueeRef.current.startY, point.y);
+      setSelectionRect({
+        left,
+        top,
+        width: Math.max(0, right - left),
+        height: Math.max(0, bottom - top)
+      });
+
+      const selected = notesRef.current
+        .filter((note) => {
+          const noteLeft = note.x ?? 0;
+          const noteTop = note.y ?? 0;
+          const noteRight = noteLeft + (note.width ?? 0);
+          const noteBottom = noteTop + (note.height ?? 0);
+          return (
+            noteRight >= left &&
+            noteLeft <= right &&
+            noteBottom >= top &&
+            noteTop <= bottom
+          );
+        })
+        .map((note) => note.id);
+
+      setSelectedIds(selected);
+      setSelectedId(selected[0] ?? null);
+    },
+    [notesRef, setSelectedId, setSelectedIds]
+  );
+
+  const endMarqueeSelection = useCallback(() => {
+    if (!marqueeRef.current.active) return { moved: false };
+    const moved = marqueeRef.current.moved;
+    marqueeRef.current.active = false;
+    setSelectionRect(null);
+    if (!moved) {
+      clearSelection();
+    }
+    return { moved };
+  }, [clearSelection]);
+
+  const cancelMarqueeSelection = useCallback(() => {
+    marqueeRef.current.active = false;
+    setSelectionRect(null);
+  }, []);
+
   return {
     selectedId,
     selectedIds,
@@ -230,6 +297,11 @@ export const useBoardInteractions = ({
     moveNote,
     commitNotePosition,
     queueNoteResize,
+    selectionRect,
+    startMarqueeSelection,
+    updateMarqueeSelection,
+    endMarqueeSelection,
+    cancelMarqueeSelection,
     clearInteractionQueues
   };
 };

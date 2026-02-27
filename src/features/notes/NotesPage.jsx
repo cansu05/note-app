@@ -102,6 +102,11 @@ export const NotesPage = () => {
             duplicateNotes={board.duplicateNotes}
             setSelectedIds={board.setSelectedIds}
             queueNoteResize={board.queueNoteResize}
+            selectionRect={board.selectionRect}
+            startMarqueeSelection={board.startMarqueeSelection}
+            updateMarqueeSelection={board.updateMarqueeSelection}
+            endMarqueeSelection={board.endMarqueeSelection}
+            cancelMarqueeSelection={board.cancelMarqueeSelection}
             openConfirm={controller.openConfirm}
             closeConfirm={controller.closeConfirm}
             removeNote={board.removeNote}

@@ -39,7 +39,11 @@ const PageTreeNodeBase = ({
           <button
             type="button"
             className="page-toggle"
-            onClick={() => onTogglePageChildren(page.id)}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onTogglePageChildren(page.id);
+            }}
             aria-label={`${page.name} alt sayfalari ${isCollapsed ? "ac" : "kapat"}`}
             title={isCollapsed ? "Alt sayfalari ac" : "Alt sayfalari kapat"}
           >
@@ -93,30 +97,7 @@ const PageTreeNodeBase = ({
   );
 };
 
-const arePageTreeNodePropsEqual = (previous, next) => {
-  if (previous.page !== next.page || previous.depth !== next.depth) return false;
-
-  const wasActive = previous.activePageId === previous.page.id;
-  const isActive = next.activePageId === next.page.id;
-  if (wasActive !== isActive) return false;
-
-  const wasCollapsed = previous.collapsedPageIds.has(previous.page.id);
-  const isCollapsed = next.collapsedPageIds.has(next.page.id);
-  if (wasCollapsed !== isCollapsed) return false;
-
-  const previousChildren = previous.childrenByParentId.get(previous.page.id) ?? [];
-  const nextChildren = next.childrenByParentId.get(next.page.id) ?? [];
-  if (previousChildren !== nextChildren) return false;
-
-  const wasDropTarget = previous.dropTargetId === previous.page.id;
-  const isDropTarget = next.dropTargetId === next.page.id;
-  if (wasDropTarget !== isDropTarget) return false;
-  if (isDropTarget && previous.dropMode !== next.dropMode) return false;
-
-  return true;
-};
-
-const PageTreeNode = memo(PageTreeNodeBase, arePageTreeNodePropsEqual);
+const PageTreeNode = memo(PageTreeNodeBase);
 
 export const NotesSidebar = ({
   pages,
