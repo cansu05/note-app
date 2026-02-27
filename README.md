@@ -1,4 +1,4 @@
-# 📝 Note App — Firebase Notes Board
+# 📝 Note App — Notes Board
 
 Modern, etkileşimli ve ölçeklenebilir bir not yönetim uygulaması.  
 Kullanıcılar birden fazla sayfa ve alt sayfa oluşturabilir, notları serbest biçimde konumlandırabilir, yeniden boyutlandırabilir ve içerikleri zengin metin editörü ile düzenleyebilir.
