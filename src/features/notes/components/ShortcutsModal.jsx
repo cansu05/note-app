@@ -22,6 +22,9 @@ export const ShortcutsModal = ({ isOpen, onClose }) => {
           <li>
             <kbd>Delete</kbd>/<kbd>Backspace</kbd>: Seçili notları sil
           </li>
+          <li>
+            <kbd>Space</kbd> basılı tut + sürükle: Canvas içinde hand ile gez
+          </li>
           <li>Seçili not varken üstteki renklerden tıkla: Toplu renk değiştir</li>
         </ul>
         <div className="confirm-modal-actions">

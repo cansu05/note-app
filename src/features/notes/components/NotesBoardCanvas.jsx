@@ -1,8 +1,14 @@
-import { memo, useCallback } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { NOTES_UI_ERRORS, NOTES_UI_TEXT } from "../notesMessages";
 import { useBoardUiStore } from "../store/useBoardUiStore";
 import { useBoardKeyboardShortcuts } from "../hooks/useBoardKeyboardShortcuts";
 import { NoteCard } from "./NoteCard";
+
+const isEditableTarget = (target) => {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  return Boolean(target.closest("input, textarea, [contenteditable='true']"));
+};
 
 export const NotesBoardCanvas = memo(({
   notes,
@@ -26,6 +32,65 @@ export const NotesBoardCanvas = memo(({
 }) => {
   const clipboardIds = useBoardUiStore((state) => state.clipboardIds);
   const setClipboardIds = useBoardUiStore((state) => state.setClipboardIds);
+  const [isSpacePressed, setIsSpacePressed] = useState(false);
+  const [isPanning, setIsPanning] = useState(false);
+  const panStateRef = useRef({ active: false, x: 0, y: 0 });
+  const panOffsetRef = useRef({ x: 0, y: 0 });
+  const zoomLevelRef = useRef(zoomLevel);
+  const frameRef = useRef(null);
+  const zoomNodeRef = useRef(null);
+
+  const applyTransform = useCallback(() => {
+    const node = zoomNodeRef.current;
+    if (!node) return;
+    const { x, y } = panOffsetRef.current;
+    node.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${zoomLevelRef.current})`;
+  }, []);
+
+  useEffect(() => {
+    zoomLevelRef.current = zoomLevel;
+    applyTransform();
+  }, [applyTransform, zoomLevel]);
+
+  useEffect(
+    () => () => {
+      if (frameRef.current != null) {
+        cancelAnimationFrame(frameRef.current);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.code !== "Space") return;
+      if (isEditableTarget(event.target)) return;
+      event.preventDefault();
+      setIsSpacePressed(true);
+    };
+
+    const onKeyUp = (event) => {
+      if (event.code !== "Space") return;
+      setIsSpacePressed(false);
+      panStateRef.current.active = false;
+      setIsPanning(false);
+    };
+
+    const onBlur = () => {
+      setIsSpacePressed(false);
+      panStateRef.current.active = false;
+      setIsPanning(false);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", onBlur);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", onBlur);
+    };
+  }, []);
 
   const handleSelect = useCallback(
     (id, event) => {
@@ -98,15 +163,58 @@ export const NotesBoardCanvas = memo(({
     setUiError
   });
 
+  const handleBoardPointerDown = useCallback(
+    (event) => {
+      if (!isSpacePressed || event.button !== 0) return;
+      panStateRef.current = { active: true, x: event.clientX, y: event.clientY };
+      setIsPanning(true);
+      event.currentTarget.setPointerCapture(event.pointerId);
+    },
+    [isSpacePressed]
+  );
+
+  const handleBoardPointerMove = useCallback((event) => {
+    if (!panStateRef.current.active) return;
+    const dx = event.clientX - panStateRef.current.x;
+    const dy = event.clientY - panStateRef.current.y;
+    panStateRef.current.x = event.clientX;
+    panStateRef.current.y = event.clientY;
+    panOffsetRef.current = {
+      x: panOffsetRef.current.x + dx,
+      y: panOffsetRef.current.y + dy
+    };
+    if (frameRef.current != null) return;
+    frameRef.current = requestAnimationFrame(() => {
+      frameRef.current = null;
+      applyTransform();
+    });
+  }, [applyTransform]);
+
+  const handleBoardPointerUp = useCallback((event) => {
+    if (!panStateRef.current.active) return;
+    panStateRef.current.active = false;
+    setIsPanning(false);
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }, []);
+
   return (
-    <section className="board" ref={boardRef} onClick={clearSelection}>
-      <div className="board-zoom-stage" style={{ width: boardStage.stageWidth, height: boardStage.stageHeight }}>
+    <section
+      className={`board ${isSpacePressed ? "pan-ready" : ""} ${isPanning ? "panning" : ""}`}
+      ref={boardRef}
+      onClick={clearSelection}
+      onPointerDown={handleBoardPointerDown}
+      onPointerMove={handleBoardPointerMove}
+      onPointerUp={handleBoardPointerUp}
+    >
+      <div className="board-zoom-stage">
         <div
+          ref={zoomNodeRef}
           className="board-zoom"
           style={{
             width: boardStage.unscaledWidth,
-            height: boardStage.unscaledHeight,
-            transform: `scale(${zoomLevel})`
+            height: boardStage.unscaledHeight
           }}
         >
           {notes.length === 0 ? <p className="empty-board">{NOTES_UI_TEXT.emptyBoard}</p> : null}

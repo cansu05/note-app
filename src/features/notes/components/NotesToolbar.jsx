@@ -17,6 +17,7 @@ export const NotesToolbar = ({
         {colors.map((color) => (
           <button
             key={color}
+            type="button"
             className={`swatch ${activeColor === color ? "active" : ""}`}
             style={{ backgroundColor: color }}
             onClick={() => setActiveColor(color)}
@@ -37,13 +38,13 @@ export const NotesToolbar = ({
         </button>
       </div>
       <div className="toolbar-actions">
-        <button className="create-model" onClick={onOpenShortcuts}>
+        <button type="button" className="create-model" onClick={onOpenShortcuts}>
           Kısayollar
         </button>
-        <button className="create-note" onClick={createNote}>
+        <button type="button" className="create-note" onClick={createNote}>
           + Not Ekle
         </button>
-        <button className="create-model" onClick={createModel}>
+        <button type="button" className="create-model" onClick={createModel}>
           + Model Ekle
         </button>
       </div>
