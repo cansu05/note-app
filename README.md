@@ -1,31 +1,64 @@
-# Note App - Firebase Notes Board
+# 📝 Note App — Firebase Notes Board
 
-Modern bir not uygulamasi. Kullanicilar sayfalar olusturabilir, not ekleyebilir, notlari surukleyip yeniden boyutlandirabilir ve icerikleri zengin metin olarak duzenleyebilir.
+Modern, etkileşimli ve ölçeklenebilir bir not yönetim uygulaması.  
+Kullanıcılar birden fazla sayfa ve alt sayfa oluşturabilir, notları serbest biçimde konumlandırabilir, yeniden boyutlandırabilir ve içerikleri zengin metin editörü ile düzenleyebilir.
 
-## Özellikler
+Uygulama, gerçek zamanlı veri yönetimi ve modüler mimari yaklaşımıyla modern web uygulamalarına örnek olacak şekilde tasarlanmıştır.
 
-- Coklu sayfa ve alt sayfa (hiyerarsik yapi)
-- Surukle-birak not yerlesimi
-- Notlari yeniden boyutlandirma
-- Zengin metin duzenleme (kalin, italik, liste stilleri)
-- Yakinlastirma/Uzaklastirma (zoom)
-- Renk secimiyle not olusturma
-- Firebase tabanli veri saklama
-- Servis + repository ayrimiyla olceklenebilir mimari
+---
 
-## Teknolojiler
+## 🚀 Özellikler
 
+### 📂 Sayfa Yönetimi
+- Çoklu sayfa ve alt sayfa desteği (hiyerarşik yapı)
+- Sayfalar arasında organize not yönetimi
+- Ölçeklenebilir veri modeli
+
+### 🧩 Etkileşimli Not Sistemi
+- Sürükle-bırak (drag & drop) ile serbest yerleşim
+- Notları yeniden boyutlandırma
+- Renk seçimi ile görsel kategorilendirme
+- Tuval benzeri çalışma alanı
+
+### ✍️ Zengin Metin Düzenleme
+- Kalın, italik ve liste stilleri
+- Formatlanmış içerik desteği
+- Kullanıcı dostu düzenleme deneyimi
+
+### 🔍 Görüntüleme ve Kontrol
+- Yakınlaştırma / uzaklaştırma (zoom)
+- Büyük not panolarında rahat kullanım
+- Dinamik arayüz davranışı
+
+### ☁️ Veri Yönetimi
+- Firebase tabanlı veri saklama
+- Gerçek zamanlı veri senkronizasyonuna uygun yapı
+- Kalıcı kullanıcı verileri
+
+### 🏗️ Mimari
+- Servis + Repository katman ayrımı
+- Modüler ve sürdürülebilir kod yapısı
+- Ölçeklenebilir frontend mimarisi
+
+---
+
+## 🛠️ Kullanılan Teknolojiler
+
+**Frontend**
 - React 18
 - Vite 5
 - JavaScript (ES Modules)
 - CSS
-- Firebase
 
-## Kurulum
+**Backend / Veri Katmanı**
+- Firebase (Cloud Firestore)
+
+---
+
+## ⚙️ Kurulum
+
+Projeyi yerel ortamda çalıştırmak için:
 
 ```bash
 npm install
 npm run dev
-```
-
-
