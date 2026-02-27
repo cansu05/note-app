@@ -1,8 +1,8 @@
-# ?? Note App - Firebase Notes Board
+# Note App - Firebase Notes Board
 
 Modern bir not uygulamasi. Kullanicilar sayfalar olusturabilir, not ekleyebilir, notlari surukleyip yeniden boyutlandirabilir ve icerikleri zengin metin olarak duzenleyebilir.
 
-## ?? Ozellikler
+## Özellikler
 
 - Coklu sayfa ve alt sayfa (hiyerarsik yapi)
 - Surukle-birak not yerlesimi
@@ -13,7 +13,7 @@ Modern bir not uygulamasi. Kullanicilar sayfalar olusturabilir, not ekleyebilir,
 - Firebase tabanli veri saklama
 - Servis + repository ayrimiyla olceklenebilir mimari
 
-## ?? Teknolojiler
+## Teknolojiler
 
 - React 18
 - Vite 5
@@ -21,7 +21,7 @@ Modern bir not uygulamasi. Kullanicilar sayfalar olusturabilir, not ekleyebilir,
 - CSS
 - Firebase
 
-## ? Kurulum
+## Kurulum
 
 ```bash
 npm install
