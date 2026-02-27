@@ -1,4 +1,4 @@
-import { get, ref, remove, set } from "firebase/database";
+import { get, ref, remove, set, update } from "firebase/database";
 import { auth, db } from "../lib/firebase";
 
 const userPagesPath = () => {
@@ -32,11 +32,18 @@ export class FirebasePageRepository {
 
   async update(id, changes) {
     const pagesPath = userPagesPath();
-    const current = await get(ref(db, `${pagesPath}/${id}`));
-    const currentValue = current.val() || {};
-    const payload = { ...currentValue, ...changes, updatedAt: new Date().toISOString() };
-    await set(ref(db, `${pagesPath}/${id}`), payload);
+    const payload = { ...changes, updatedAt: new Date().toISOString() };
+    await update(ref(db, `${pagesPath}/${id}`), payload);
     return payload;
+  }
+
+  async updateMany(changesById) {
+    const pagesPath = userPagesPath();
+    const now = new Date().toISOString();
+    const payload = Object.fromEntries(
+      Object.entries(changesById).map(([id, changes]) => [id, { ...changes, updatedAt: now }])
+    );
+    await update(ref(db, pagesPath), payload);
   }
 
   async remove(id) {

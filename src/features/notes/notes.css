@@ -22,8 +22,12 @@
 .workspace {
   min-height: 0;
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 280px 1fr;
   gap: 14px;
+}
+
+.workspace.sidebar-hidden {
+  grid-template-columns: 44px 1fr;
 }
 
 .sidebar {
@@ -35,6 +39,13 @@
   display: grid;
   grid-template-rows: auto 1fr;
   gap: 10px;
+}
+
+.sidebar-collapsed {
+  padding: 8px 6px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
 }
 
 .sidebar-top {
@@ -49,6 +60,12 @@
   font-size: 16px;
 }
 
+.sidebar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .create-page {
   border: none;
   border-radius: 10px;
@@ -57,6 +74,32 @@
   color: var(--btn-text-dark);
   font-weight: 700;
   cursor: pointer;
+}
+
+.sidebar-hide-btn,
+.sidebar-collapse-toggle {
+  border: none;
+  border-radius: 10px;
+  padding: 7px 10px;
+  background: #efe5d4;
+  color: #3d342d;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sidebar-hide-btn {
+  display: grid;
+  place-items: center;
+  padding: 7px 8px;
+}
+
+.sidebar-collapse-toggle {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
 }
 
 .page-list {
@@ -75,6 +118,39 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  border-radius: 10px;
+}
+
+.page-row.drop-inside {
+  outline: 2px dashed rgba(142, 162, 103, 0.7);
+  outline-offset: 1px;
+}
+
+.page-row.drop-before {
+  box-shadow: inset 0 2px 0 rgba(142, 162, 103, 0.9);
+}
+
+.page-row.drop-after {
+  box-shadow: inset 0 -2px 0 rgba(142, 162, 103, 0.9);
+}
+
+.page-toggle,
+.page-toggle-spacer {
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+}
+
+.page-toggle {
+  border: none;
+  border-radius: 8px;
+  background: #efe5d4;
+  color: #3d342d;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
 }
 
 .page-item {
@@ -91,6 +167,7 @@
   overflow-wrap: anywhere;
   word-break: break-word;
   flex: 1;
+  cursor: grab;
 }
 
 .page-item.active {
@@ -593,6 +670,31 @@
 .confirm-delete {
   background: #c66f80;
   color: #fff;
+}
+
+.shortcuts-modal {
+  width: min(92vw, 520px);
+}
+
+.shortcuts-list {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  color: #4a413a;
+}
+
+.shortcuts-list li {
+  margin: 6px 0;
+}
+
+kbd {
+  border: 1px solid rgba(77, 67, 59, 0.3);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  padding: 1px 6px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 @media (max-width: 720px) {

@@ -1,30 +1,47 @@
 import { memo, useCallback } from "react";
 import { NOTES_UI_ERRORS, NOTES_UI_TEXT } from "../notesMessages";
+import { useBoardUiStore } from "../store/useBoardUiStore";
+import { useBoardKeyboardShortcuts } from "../hooks/useBoardKeyboardShortcuts";
 import { NoteCard } from "./NoteCard";
 
 export const NotesBoardCanvas = memo(({
   notes,
   selectedId,
+  selectedIds,
   boardRef,
   boardStage,
   zoomLevel,
-  setSelectedId,
+  clearSelection,
   bringNoteToFront,
   moveNote,
   commitNotePosition,
   updateNote,
+  duplicateNotes,
+  setSelectedIds,
   queueNoteResize,
   openConfirm,
   closeConfirm,
   removeNote,
   setUiError
 }) => {
-  const clearSelection = useCallback(() => setSelectedId(null), [setSelectedId]);
-  const handleSelect = useCallback((id) => bringNoteToFront(id), [bringNoteToFront]);
+  const clipboardIds = useBoardUiStore((state) => state.clipboardIds);
+  const setClipboardIds = useBoardUiStore((state) => state.setClipboardIds);
+
+  const handleSelect = useCallback(
+    (id, event) => {
+      const isAdditive = Boolean(event?.shiftKey || event?.metaKey || event?.ctrlKey);
+      const preserveGroup =
+        !isAdditive && selectedIds.includes(id) && selectedIds.length > 1;
+      bringNoteToFront(id, { additive: isAdditive, preserveGroup });
+    },
+    [bringNoteToFront, selectedIds]
+  );
+
   const handleDrag = useCallback(
     (id, dx, dy) => moveNote(id, dx / zoomLevel, dy / zoomLevel),
     [moveNote, zoomLevel]
   );
+
   const handleDragEnd = useCallback(
     async (id) => {
       try {
@@ -36,6 +53,7 @@ export const NotesBoardCanvas = memo(({
     },
     [commitNotePosition, setUiError]
   );
+
   const handleSave = useCallback(
     async ({ id, ...changes }) => {
       try {
@@ -48,7 +66,9 @@ export const NotesBoardCanvas = memo(({
     },
     [setUiError, updateNote]
   );
+
   const handleResize = useCallback((id, size) => queueNoteResize(id, size), [queueNoteResize]);
+
   const handleDelete = useCallback(
     (note) =>
       openConfirm({
@@ -62,6 +82,21 @@ export const NotesBoardCanvas = memo(({
       }),
     [closeConfirm, openConfirm, removeNote]
   );
+
+  useBoardKeyboardShortcuts({
+    notes,
+    selectedId,
+    selectedIds,
+    clearSelection,
+    duplicateNotes,
+    removeNote,
+    openConfirm,
+    closeConfirm,
+    setSelectedIds,
+    setClipboardIds,
+    clipboardIds,
+    setUiError
+  });
 
   return (
     <section className="board" ref={boardRef} onClick={clearSelection}>
@@ -80,7 +115,7 @@ export const NotesBoardCanvas = memo(({
             <NoteCard
               key={note.id}
               note={note}
-              isSelected={selectedId === note.id}
+              isSelected={selectedIds.includes(note.id) || selectedId === note.id}
               onSelect={handleSelect}
               onDrag={handleDrag}
               onDragEnd={handleDragEnd}

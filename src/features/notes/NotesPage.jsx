@@ -1,14 +1,22 @@
+import { useCallback } from "react";
 import { ActivePagePanel } from "./components/ActivePagePanel";
 import { ConfirmModal } from "./components/ConfirmModal";
 import { CreatePageModal } from "./components/CreatePageModal";
 import { NotesBoardCanvas } from "./components/NotesBoardCanvas";
 import { NotesSidebar } from "./components/NotesSidebar";
 import { NotesToolbar } from "./components/NotesToolbar";
+import { ShortcutsModal } from "./components/ShortcutsModal";
 import { useNotesBoard } from "./hooks/useNotesBoard";
 import { useNotesPageController } from "./hooks/useNotesPageController";
 import { NOTES_UI_ERRORS } from "./notesMessages";
+import { useBoardUiStore } from "./store/useBoardUiStore";
 
 export const NotesPage = () => {
+  const isSidebarHidden = useBoardUiStore((state) => state.isSidebarHidden);
+  const toggleSidebar = useBoardUiStore((state) => state.toggleSidebar);
+  const isShortcutsOpen = useBoardUiStore((state) => state.isShortcutsOpen);
+  const openShortcuts = useBoardUiStore((state) => state.openShortcuts);
+  const closeShortcuts = useBoardUiStore((state) => state.closeShortcuts);
   const board = useNotesBoard();
   const activePage = board.pages.find((page) => page.id === board.activePageId) ?? null;
 
@@ -20,8 +28,28 @@ export const NotesPage = () => {
     createNote: board.createNote,
     createNewPage: board.createNewPage,
     renamePage: board.renamePage,
-    deletePage: board.deletePage
+    deletePage: board.deletePage,
+    movePage: board.movePage
   });
+
+  const handleToolbarColorSelect = useCallback(
+    async (color) => {
+      if (board.selectedIds.length > 0) {
+        try {
+          await Promise.all(
+            board.selectedIds.map((noteId) => board.updateNote(noteId, { color }))
+          );
+          controller.setUiError("");
+        } catch {
+          controller.setUiError(NOTES_UI_ERRORS.saveNote);
+          return;
+        }
+      }
+
+      board.setActiveColor(color);
+    },
+    [board, controller]
+  );
 
   return (
     <main className="app-shell">
@@ -30,7 +58,8 @@ export const NotesPage = () => {
       <NotesToolbar
         colors={board.colors}
         activeColor={board.activeColor}
-        setActiveColor={board.setActiveColor}
+        setActiveColor={handleToolbarColorSelect}
+        onOpenShortcuts={openShortcuts}
         createNote={controller.handleCreateNote}
         createModel={controller.handleCreateModel}
         zoomLevel={board.zoomLevel}
@@ -39,13 +68,16 @@ export const NotesPage = () => {
         onZoomReset={controller.handleZoomReset}
       />
 
-      <section className="workspace">
+      <section className={`workspace ${isSidebarHidden ? "sidebar-hidden" : ""}`}>
         <NotesSidebar
           pages={board.pages}
           activePageId={board.activePageId}
           selectPage={board.selectPage}
           onRequestCreatePage={controller.openCreatePage}
           onRequestCreateSubPage={controller.openCreatePage}
+          onMovePage={controller.handleMovePage}
+          isHidden={isSidebarHidden}
+          onToggleSidebar={toggleSidebar}
         />
 
         <section className="board-column">
@@ -58,14 +90,17 @@ export const NotesPage = () => {
           <NotesBoardCanvas
             notes={board.notes}
             selectedId={board.selectedId}
+            selectedIds={board.selectedIds}
             boardRef={board.boardRef}
             boardStage={controller.boardStage}
             zoomLevel={board.zoomLevel}
-            setSelectedId={board.setSelectedId}
+            clearSelection={board.clearSelection}
             bringNoteToFront={board.bringNoteToFront}
             moveNote={board.moveNote}
             commitNotePosition={board.commitNotePosition}
             updateNote={board.updateNote}
+            duplicateNotes={board.duplicateNotes}
+            setSelectedIds={board.setSelectedIds}
             queueNoteResize={board.queueNoteResize}
             openConfirm={controller.openConfirm}
             closeConfirm={controller.closeConfirm}
@@ -109,6 +144,8 @@ export const NotesPage = () => {
           }
         }}
       />
+
+      <ShortcutsModal isOpen={isShortcutsOpen} onClose={closeShortcuts} />
     </main>
   );
 };

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { NOTE_COLORS } from "../../../domain/note";
+import { useBoardUiStore } from "../store/useBoardUiStore";
 import { useBoardData } from "./useBoardData";
 import { useBoardInteractions } from "./useBoardInteractions";
 
@@ -7,7 +8,8 @@ export const useNotesBoard = () => {
   const boardRef = useRef(null);
   const zoomRef = useRef(1);
   const maxZIndexRef = useRef(1);
-  const [zoomLevel, setZoomLevel] = useState(1);
+  const zoomLevel = useBoardUiStore((state) => state.zoomLevel);
+  const setZoomLevel = useBoardUiStore((state) => state.setZoomLevel);
 
   const data = useBoardData({ boardRef, zoomRef, maxZIndexRef });
   const interactions = useBoardInteractions({
@@ -15,8 +17,6 @@ export const useNotesBoard = () => {
     zoomRef,
     notesRef: data.notesRef,
     setNotes: data.setNotes,
-    selectedId: data.selectedId,
-    setSelectedId: data.setSelectedId,
     updateNote: data.updateNote,
     service: data.service,
     maxZIndexRef
@@ -42,16 +42,22 @@ export const useNotesBoard = () => {
     createNewPage: data.createNewPage,
     renamePage: data.renamePage,
     deletePage: data.deletePage,
+    movePage: data.movePage,
     colors: NOTE_COLORS,
     activeColor: data.activeColor,
     setActiveColor: data.setActiveColor,
     selectedId: interactions.selectedId,
+    selectedIds: interactions.selectedIds,
+    setSelectedIds: interactions.setSelectedIds,
     setSelectedId: interactions.setSelectedId,
+    clearSelection: interactions.clearSelection,
+    selectNote: interactions.selectNote,
     zoomLevel,
     setZoomLevel,
     bringNoteToFront: interactions.bringNoteToFront,
     boardRef,
     createNote: data.createNote,
+    duplicateNotes: data.duplicateNotes,
     removeNote: data.removeNote,
     updateNote: data.updateNote,
     moveNote: interactions.moveNote,

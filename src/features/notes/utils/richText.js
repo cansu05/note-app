@@ -29,6 +29,13 @@ const ALLOWED_MARKERS = new Set([
 ]);
 
 const BLOCK_TEXT_TAGS = new Set(["p", "div", "li"]);
+const HTML_NS = "http://www.w3.org/1999/xhtml";
+const MAX_RICH_HTML_LENGTH = 20000;
+
+const sanitizeRawHtml = (html = "") =>
+  String(html)
+    .slice(0, MAX_RICH_HTML_LENGTH)
+    .replaceAll("\0", "");
 
 const sanitizeNode = (doc, node) => {
   if (node.nodeType === Node.TEXT_NODE) {
@@ -36,6 +43,10 @@ const sanitizeNode = (doc, node) => {
   }
 
   if (node.nodeType !== Node.ELEMENT_NODE) {
+    return doc.createDocumentFragment();
+  }
+
+  if (node.namespaceURI && node.namespaceURI !== HTML_NS) {
     return doc.createDocumentFragment();
   }
 
@@ -65,12 +76,16 @@ const sanitizeNode = (doc, node) => {
 };
 
 export const sanitizeRichHtml = (html = "") => {
+  const safeInput = sanitizeRawHtml(html);
   if (typeof document === "undefined") {
-    return html.replace(/<[^>]+>/g, " ");
+    return safeInput.replace(/<[^>]+>/g, " ");
   }
 
   const parser = new DOMParser();
-  const parsed = parser.parseFromString(`<div>${html}</div>`, "text/html");
+  const parsed = parser.parseFromString(`<div>${safeInput}</div>`, "text/html");
+  if (parsed.querySelector("parsererror")) {
+    return "";
+  }
   const sourceRoot = parsed.body.firstElementChild;
 
   const output = document.createElement("div");

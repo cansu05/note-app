@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from "react";
+﻿import { memo, useEffect, useRef, useState } from "react";
 import { getAutoSize } from "../utils/noteSizing";
 import { htmlToText, normalizeHtml } from "../utils/richText";
 import { useNoteEditor } from "../hooks/useNoteEditor";
@@ -20,9 +20,7 @@ export const NoteCard = memo(({
   const editorRef = useRef(null);
   const [isEditing, setIsEditing] = useState(Boolean(note.isNew));
   const [draftTitle, setDraftTitle] = useState(note.title);
-  const [draftContent, setDraftContent] = useState(
-    normalizeHtml(note.content || "")
-  );
+  const [draftContent, setDraftContent] = useState(normalizeHtml(note.content || ""));
   const [listStyle, setListStyle] = useState("choose");
 
   const {
@@ -80,7 +78,7 @@ export const NoteCard = memo(({
       y: e.clientY
     };
     e.currentTarget.setPointerCapture(e.pointerId);
-    onSelect(note.id);
+    onSelect(note.id, e);
   };
 
   const handlePointerMove = (e) => {
@@ -99,8 +97,10 @@ export const NoteCard = memo(({
       onDragEnd(note.id);
     }
 
+    if (e.currentTarget.hasPointerCapture?.(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
     dragState.current.dragging = false;
-    e.currentTarget.releasePointerCapture(e.pointerId);
   };
 
   const handleSave = async (e) => {
@@ -176,7 +176,7 @@ export const NoteCard = memo(({
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsEditing(true);
-                    onSelect(note.id);
+                    onSelect(note.id, e);
                   }}
                 >
                   Düzenle
@@ -247,7 +247,6 @@ export const NoteCard = memo(({
           dangerouslySetInnerHTML={{ __html: draftContent || "<p></p>" }}
         />
       )}
-
     </article>
   );
 });

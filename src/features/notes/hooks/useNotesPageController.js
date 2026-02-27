@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+﻿import { useCallback, useMemo, useState } from "react";
 import { NOTES_UI_ERRORS, NOTES_UI_TEXT } from "../notesMessages";
 
 export const useNotesPageController = ({
@@ -9,7 +9,8 @@ export const useNotesPageController = ({
   createNote,
   createNewPage,
   renamePage,
-  deletePage
+  deletePage,
+  movePage
 }) => {
   const MIN_ZOOM = 0.2;
   const MAX_ZOOM = 1.8;
@@ -29,9 +30,12 @@ export const useNotesPageController = ({
     parentPageId: null
   });
 
-  const openConfirm = useCallback(({ title, message, confirmText = NOTES_UI_TEXT.confirmDefault, onConfirm }) => {
-    setConfirmState({ isOpen: true, title, message, confirmText, onConfirm });
-  }, []);
+  const openConfirm = useCallback(
+    ({ title, message, confirmText = NOTES_UI_TEXT.confirmDefault, onConfirm }) => {
+      setConfirmState({ isOpen: true, title, message, confirmText, onConfirm });
+    },
+    []
+  );
 
   const closeConfirm = useCallback(() => {
     setConfirmState((prev) => ({ ...prev, isOpen: false, onConfirm: null }));
@@ -85,26 +89,44 @@ export const useNotesPageController = ({
     setZoomLevel(1);
   }, [setZoomLevel]);
 
-  const handleRenamePage = useCallback(async (id, nextName) => {
-    try {
-      await renamePage(id, nextName);
-      setUiError("");
-    } catch {
-      setUiError(NOTES_UI_ERRORS.renamePage);
-    }
-  }, [renamePage]);
-
-  const requestDeletePage = useCallback((page) => {
-    openConfirm({
-      title: NOTES_UI_TEXT.deletePageTitle,
-      message: `"${page.name}" sayfası, alt sayfaları ve içlerindeki tüm notlar silinecek.`,
-      confirmText: NOTES_UI_TEXT.deletePageConfirm,
-      onConfirm: async () => {
-        await deletePage(page.id);
-        closeConfirm();
+  const handleRenamePage = useCallback(
+    async (id, nextName) => {
+      try {
+        await renamePage(id, nextName);
+        setUiError("");
+      } catch {
+        setUiError(NOTES_UI_ERRORS.renamePage);
       }
-    });
-  }, [closeConfirm, deletePage, openConfirm]);
+    },
+    [renamePage]
+  );
+
+  const requestDeletePage = useCallback(
+    (page) => {
+      openConfirm({
+        title: NOTES_UI_TEXT.deletePageTitle,
+        message: `"${page.name}" sayfası, alt sayfaları ve içlerindeki tüm notlar silinecek.`,
+        confirmText: NOTES_UI_TEXT.deletePageConfirm,
+        onConfirm: async () => {
+          await deletePage(page.id);
+          closeConfirm();
+        }
+      });
+    },
+    [closeConfirm, deletePage, openConfirm]
+  );
+
+  const handleMovePage = useCallback(
+    async (sourceId, targetId, position) => {
+      try {
+        await movePage(sourceId, targetId, position);
+        setUiError("");
+      } catch {
+        setUiError(NOTES_UI_ERRORS.generic);
+      }
+    },
+    [movePage]
+  );
 
   const boardStage = useMemo(() => {
     const viewport = boardRef.current;
@@ -112,8 +134,14 @@ export const useNotesPageController = ({
     const viewportHeight = viewport?.clientHeight ?? 760;
     const padding = 140;
 
-    const maxRight = notes.reduce((max, note) => Math.max(max, (note.x ?? 0) + (note.width ?? 0)), 0);
-    const maxBottom = notes.reduce((max, note) => Math.max(max, (note.y ?? 0) + (note.height ?? 0)), 0);
+    const maxRight = notes.reduce(
+      (max, note) => Math.max(max, (note.x ?? 0) + (note.width ?? 0)),
+      0
+    );
+    const maxBottom = notes.reduce(
+      (max, note) => Math.max(max, (note.y ?? 0) + (note.height ?? 0)),
+      0
+    );
 
     const unscaledWidth = Math.max(viewportWidth + padding, maxRight + padding);
     const unscaledHeight = Math.max(viewportHeight + padding, maxBottom + padding);
@@ -143,7 +171,9 @@ export const useNotesPageController = ({
     handleZoomOut,
     handleZoomReset,
     handleRenamePage,
+    handleMovePage,
     requestDeletePage,
     boardStage
   };
 };
+

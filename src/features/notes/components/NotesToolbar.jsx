@@ -2,6 +2,7 @@ export const NotesToolbar = ({
   colors,
   activeColor,
   setActiveColor,
+  onOpenShortcuts,
   createNote,
   createModel,
   zoomLevel,
@@ -36,6 +37,9 @@ export const NotesToolbar = ({
         </button>
       </div>
       <div className="toolbar-actions">
+        <button className="create-model" onClick={onOpenShortcuts}>
+          Kısayollar
+        </button>
         <button className="create-note" onClick={createNote}>
           + Not Ekle
         </button>

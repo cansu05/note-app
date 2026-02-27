@@ -17,15 +17,19 @@ export const createPage = (index = 1, parentId = null) => ({
   id: crypto.randomUUID(),
   name: `Sayfa ${index}`,
   parentId,
+  sortOrder: index,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString()
 });
 
 export const normalizePages = (pages) =>
-  pages.map((page) => ({
-    ...page,
-    parentId: page.parentId ?? null
-  }));
+  pages
+    .map((page, index) => ({
+      ...page,
+      parentId: page.parentId ?? null,
+      sortOrder: Number.isFinite(page.sortOrder) ? page.sortOrder : index + 1
+    }))
+    .sort((a, b) => a.sortOrder - b.sortOrder);
 
 export const collectDescendantPageIds = (allPages, rootId) => {
   const result = new Set([rootId]);
@@ -43,6 +47,79 @@ export const collectDescendantPageIds = (allPages, rootId) => {
   }
 
   return result;
+};
+
+const buildSiblingOrder = (allPages, parentId, movingId = null) =>
+  allPages
+    .filter((page) => page.parentId === parentId && page.id !== movingId)
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map((page) => page.id);
+
+const applySiblingOrder = (allPages, parentId, orderedIds) => {
+  const rankById = new Map(orderedIds.map((id, index) => [id, index + 1]));
+  return allPages.map((page) =>
+    page.parentId === parentId && rankById.has(page.id)
+      ? { ...page, sortOrder: rankById.get(page.id), updatedAt: new Date().toISOString() }
+      : page
+  );
+};
+
+export const movePageInTree = (allPages, sourceId, targetId, position = "inside") => {
+  if (!sourceId || !targetId || sourceId === targetId) {
+    return { nextPages: normalizePages(allPages), changesById: {} };
+  }
+
+  const sourcePage = allPages.find((page) => page.id === sourceId);
+  const targetPage = allPages.find((page) => page.id === targetId);
+  if (!sourcePage || !targetPage) {
+    return { nextPages: normalizePages(allPages), changesById: {} };
+  }
+
+  const descendants = collectDescendantPageIds(allPages, sourceId);
+  if (descendants.has(targetId)) {
+    return { nextPages: normalizePages(allPages), changesById: {} };
+  }
+
+  const nextParentId = position === "inside" ? targetId : targetPage.parentId ?? null;
+  if (nextParentId && descendants.has(nextParentId)) {
+    return { nextPages: normalizePages(allPages), changesById: {} };
+  }
+
+  let nextPages = allPages.map((page) =>
+    page.id === sourceId
+      ? { ...page, parentId: nextParentId, updatedAt: new Date().toISOString() }
+      : page
+  );
+
+  const previousSiblingIds = buildSiblingOrder(allPages, sourcePage.parentId, sourceId);
+  const nextSiblingIds = buildSiblingOrder(nextPages, nextParentId, sourceId);
+
+  if (position === "inside") {
+    nextSiblingIds.push(sourceId);
+  } else {
+    const targetIndex = nextSiblingIds.indexOf(targetId);
+    const safeIndex = targetIndex >= 0 ? targetIndex : nextSiblingIds.length;
+    const insertIndex = position === "before" ? safeIndex : safeIndex + 1;
+    nextSiblingIds.splice(insertIndex, 0, sourceId);
+  }
+
+  nextPages = applySiblingOrder(nextPages, sourcePage.parentId, previousSiblingIds);
+  nextPages = applySiblingOrder(nextPages, nextParentId, nextSiblingIds);
+  nextPages = normalizePages(nextPages);
+
+  const previousById = new Map(allPages.map((page) => [page.id, page]));
+  const changesById = nextPages.reduce((accumulator, page) => {
+    const before = previousById.get(page.id);
+    if (!before || before.parentId !== page.parentId || before.sortOrder !== page.sortOrder) {
+      accumulator[page.id] = {
+        parentId: page.parentId ?? null,
+        sortOrder: page.sortOrder
+      };
+    }
+    return accumulator;
+  }, {});
+
+  return { nextPages, changesById };
 };
 
 export const normalizeNoteDimensions = (note) => ({

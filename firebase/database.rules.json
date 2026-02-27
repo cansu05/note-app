@@ -6,12 +6,12 @@
         ".write": "auth != null && auth.uid === $uid",
         "notes": {
           "$noteId": {
-            ".validate": "newData.hasChildren(['id','createdAt','updatedAt'])"
+            ".validate": "newData.hasChildren(['id','createdAt','updatedAt']) && newData.child('id').isString() && newData.child('id').val() === $noteId && newData.child('createdAt').isString() && newData.child('updatedAt').isString() && (!newData.child('pageId').exists() || newData.child('pageId').isString()) && (!newData.child('title').exists() || (newData.child('title').isString() && newData.child('title').val().length <= 200)) && (!newData.child('content').exists() || (newData.child('content').isString() && newData.child('content').val().length <= 20000)) && (!newData.child('color').exists() || (newData.child('color').isString() && (newData.child('color').val() === '#c66f80' || newData.child('color').val() === '#f4c7d0' || newData.child('color').val() === '#fcebf1' || newData.child('color').val() === '#4a6644' || newData.child('color').val() === '#9faa74' || newData.child('color').val() === '#d7d0b3' || newData.child('color').val() === '#ece3d2'))) && (!newData.child('kind').exists() || (newData.child('kind').isString() && (newData.child('kind').val() === 'note' || newData.child('kind').val() === 'model'))) && (!newData.child('x').exists() || (newData.child('x').isNumber() && newData.child('x').val() >= 0 && newData.child('x').val() <= 100000)) && (!newData.child('y').exists() || (newData.child('y').isNumber() && newData.child('y').val() >= 0 && newData.child('y').val() <= 100000)) && (!newData.child('width').exists() || (newData.child('width').isNumber() && newData.child('width').val() >= 120 && newData.child('width').val() <= 3000)) && (!newData.child('height').exists() || (newData.child('height').isNumber() && newData.child('height').val() >= 80 && newData.child('height').val() <= 3000)) && (!newData.child('zIndex').exists() || (newData.child('zIndex').isNumber() && newData.child('zIndex').val() >= 1 && newData.child('zIndex').val() <= 1000000)) && (!newData.child('isNew').exists() || newData.child('isNew').isBoolean())"
           }
         },
         "pages": {
           "$pageId": {
-            ".validate": "newData.hasChildren(['id','name','createdAt','updatedAt'])"
+            ".validate": "newData.hasChildren(['id','name','createdAt','updatedAt']) && newData.child('id').isString() && newData.child('id').val() === $pageId && newData.child('name').isString() && newData.child('createdAt').isString() && newData.child('updatedAt').isString() && (!newData.child('parentId').exists() || newData.child('parentId').isString()) && (!newData.child('sortOrder').exists() || newData.child('sortOrder').isNumber())"
           }
         }
       }

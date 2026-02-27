@@ -17,21 +17,22 @@
     "firebase": "^11.10.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-icons": "^5.5.0"
+    "react-icons": "^5.5.0",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.4",
+    "@eslint/js": "^9.20.0",
     "@playwright/test": "^1.49.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
-    "@eslint/js": "^9.20.0",
+    "@vitejs/plugin-react": "^4.3.4",
     "eslint": "^9.20.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.1.0",
     "globals": "^15.14.0",
     "jsdom": "^26.0.0",
     "typescript": "^5.7.3",
-    "vitest": "^2.1.8",
-    "vite": "^5.4.10"
+    "vite": "^5.4.10",
+    "vitest": "^2.1.8"
   }
 }

@@ -1,18 +1,64 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { NOTE_COLORS } from "../../../domain/note";
 import { auth } from "../../../lib/firebase";
 import { FirebasePageRepository } from "../../../repositories/FirebasePageRepository";
 import { FirebaseNoteRepository } from "../../../repositories/FirebaseNoteRepository";
 import { createNoteService } from "../../../services/noteService";
 import { DEFAULT_NOTE_HEIGHT, DEFAULT_NOTE_WIDTH } from "../constants";
+import { useBoardDataStore } from "../store/useBoardDataStore";
+import { useBoardUiStore } from "../store/useBoardUiStore";
 import {
   collectDescendantPageIds,
   createPage,
   getMergedRemoteWithLegacy,
   MODEL_NOTE_WIDTH,
+  movePageInTree,
   normalizeNoteDimensions,
   normalizePages
 } from "./notesBoardHelpers";
+
+const syncMissingPages = async (pageRepository, remotePages, mergedPages) => {
+  if (mergedPages.length === remotePages.length) return;
+
+  const remotePageIds = new Set(remotePages.map((page) => page.id));
+  const missingPages = mergedPages.filter((page) => !remotePageIds.has(page.id));
+  await Promise.all(missingPages.map((page) => pageRepository.create(page)));
+};
+
+const syncMissingNotes = async (service, remoteNotes, mergedNotes) => {
+  if (mergedNotes.length === remoteNotes.length) return;
+
+  const remoteNoteIds = new Set(remoteNotes.map((note) => note.id));
+  const missingNotes = mergedNotes.filter((note) => !remoteNoteIds.has(note.id));
+  await Promise.all(missingNotes.map((note) => service.addNote(note)));
+};
+
+const ensureInitialPages = async (pageRepository, mergedPages) => {
+  if (mergedPages.length > 0) {
+    return normalizePages(mergedPages);
+  }
+
+  const fallback = createPage(1);
+  await pageRepository.create(fallback);
+  return normalizePages([fallback]);
+};
+
+const ensureNotesHavePage = async (service, notes, fallbackPageId) => {
+  const notesWithoutPage = notes.filter((note) => !note.pageId);
+  if (notesWithoutPage.length === 0) return;
+
+  await Promise.all(
+    notesWithoutPage.map((note) => service.updateNote(note.id, { pageId: fallbackPageId }))
+  );
+};
+
+const normalizeBoardNotes = (notes, fallbackPageId) =>
+  notes.map((note) =>
+    normalizeNoteDimensions({
+      ...note,
+      pageId: note.pageId || fallbackPageId
+    })
+  );
 
 export const useBoardData = ({ boardRef, zoomRef, maxZIndexRef }) => {
   const service = useMemo(() => {
@@ -21,11 +67,17 @@ export const useBoardData = ({ boardRef, zoomRef, maxZIndexRef }) => {
   }, []);
   const pageRepository = useMemo(() => new FirebasePageRepository(), []);
 
-  const [notes, setNotes] = useState([]);
-  const [pages, setPages] = useState([]);
-  const [activePageId, setActivePageId] = useState(null);
-  const [activeColor, setActiveColor] = useState(NOTE_COLORS[0]);
-  const [selectedId, setSelectedId] = useState(null);
+  const notes = useBoardDataStore((state) => state.notes);
+  const pages = useBoardDataStore((state) => state.pages);
+  const activePageId = useBoardDataStore((state) => state.activePageId);
+  const activeColor = useBoardDataStore((state) => state.activeColor) ?? NOTE_COLORS[0];
+  const setNotes = useBoardDataStore((state) => state.setNotes);
+  const setPages = useBoardDataStore((state) => state.setPages);
+  const setActivePageId = useBoardDataStore((state) => state.setActivePageId);
+  const setActiveColor = useBoardDataStore((state) => state.setActiveColor);
+  const selectedId = useBoardUiStore((state) => state.selectedId);
+  const setSelectedId = useBoardUiStore((state) => state.setSelectedId);
+  const clearSelectedIds = useBoardUiStore((state) => state.clearSelectedIds);
 
   const notesRef = useRef([]);
   const pagesRef = useRef([]);
@@ -51,24 +103,10 @@ export const useBoardData = ({ boardRef, zoomRef, maxZIndexRef }) => {
           remoteNotes
         });
 
-        if (merged.pages.length !== remotePages.length) {
-          const remotePageIds = new Set(remotePages.map((page) => page.id));
-          const missingPages = merged.pages.filter((page) => !remotePageIds.has(page.id));
-          await Promise.all(missingPages.map((page) => pageRepository.create(page)));
-        }
+        await syncMissingPages(pageRepository, remotePages, merged.pages);
+        await syncMissingNotes(service, remoteNotes, merged.notes);
 
-        if (merged.notes.length !== remoteNotes.length) {
-          const remoteNoteIds = new Set(remoteNotes.map((note) => note.id));
-          const missingNotes = merged.notes.filter((note) => !remoteNoteIds.has(note.id));
-          await Promise.all(missingNotes.map((note) => service.addNote(note)));
-        }
-
-        const savedPages = merged.pages.length > 0 ? merged.pages : [createPage(1)];
-        if (merged.pages.length === 0) {
-          await pageRepository.create(savedPages[0]);
-        }
-
-        const normalizedPages = normalizePages(savedPages);
+        const normalizedPages = await ensureInitialPages(pageRepository, merged.pages);
         if (cancelled) return;
         setPages(normalizedPages);
         setActivePageId(normalizedPages[0].id);
@@ -76,22 +114,10 @@ export const useBoardData = ({ boardRef, zoomRef, maxZIndexRef }) => {
         const data = merged.notes.length > 0 ? merged.notes : await service.listNotes();
         if (cancelled) return;
 
-        const notesWithoutPage = data.filter((n) => !n.pageId);
-        if (notesWithoutPage.length > 0) {
-          await Promise.all(
-            notesWithoutPage.map((n) =>
-              service.updateNote(n.id, { pageId: normalizedPages[0].id })
-            )
-          );
-        }
+        await ensureNotesHavePage(service, data, normalizedPages[0].id);
         if (cancelled) return;
 
-        const normalizedNotes = data.map((note) =>
-          normalizeNoteDimensions({
-            ...note,
-            pageId: note.pageId || normalizedPages[0].id
-          })
-        );
+        const normalizedNotes = normalizeBoardNotes(data, normalizedPages[0].id);
 
         maxZIndexRef.current = normalizedNotes.reduce(
           (max, note) => Math.max(max, note.zIndex ?? 1),
@@ -109,19 +135,21 @@ export const useBoardData = ({ boardRef, zoomRef, maxZIndexRef }) => {
     return () => {
       cancelled = true;
     };
-  }, [maxZIndexRef, pageRepository, service]);
+  }, [maxZIndexRef, pageRepository, service, setActivePageId, setNotes, setPages]);
 
   const createNewPage = useCallback(async (name, parentId = null) => {
     const safeName = (name || "").trim();
+    const siblingCount = pagesRef.current.filter((page) => page.parentId === parentId).length;
     const next = {
       ...createPage(pagesRef.current.length + 1, parentId),
-      name: safeName || `Sayfa ${pagesRef.current.length + 1}`
+      name: safeName || `Sayfa ${pagesRef.current.length + 1}`,
+      sortOrder: siblingCount + 1
     };
 
     await pageRepository.create(next);
-    setPages((prev) => [...prev, next]);
+    setPages((prev) => normalizePages([...prev, next]));
     setActivePageId(next.id);
-  }, [pageRepository]);
+  }, [pageRepository, setActivePageId, setPages]);
 
   const renamePage = useCallback(async (id, nextName) => {
     const safeName = (nextName || "").trim();
@@ -134,14 +162,14 @@ export const useBoardData = ({ boardRef, zoomRef, maxZIndexRef }) => {
         : page
     );
 
-    setPages(updated);
+    setPages(normalizePages(updated));
     try {
       await pageRepository.update(id, { name: safeName });
     } catch {
       setPages(previous);
       throw new Error("Page rename failed");
     }
-  }, [pageRepository]);
+  }, [pageRepository, setPages]);
 
   const deletePage = useCallback(async (id) => {
     const pageIdsToDelete = collectDescendantPageIds(pagesRef.current, id);
@@ -164,12 +192,28 @@ export const useBoardData = ({ boardRef, zoomRef, maxZIndexRef }) => {
       return;
     }
 
-    setPages(remainingPages);
+    setPages(normalizePages(remainingPages));
     if (activePageId && pageIdsToDelete.has(activePageId)) {
       setActivePageId(remainingPages[0].id);
       setSelectedId(null);
     }
-  }, [activePageId, pageRepository, service]);
+  }, [activePageId, pageRepository, service, setActivePageId, setNotes, setPages, setSelectedId]);
+
+  const movePage = useCallback(async (sourceId, targetId, position = "inside") => {
+    if (!sourceId || !targetId || sourceId === targetId) return;
+
+    const previous = pagesRef.current;
+    const { nextPages, changesById } = movePageInTree(previous, sourceId, targetId, position);
+    if (Object.keys(changesById).length === 0) return;
+
+    setPages(nextPages);
+    try {
+      await pageRepository.updateMany(changesById);
+    } catch {
+      setPages(previous);
+      throw new Error("Page move failed");
+    }
+  }, [pageRepository, setPages]);
 
   const createNote = useCallback(async ({ kind = "note" } = {}) => {
     if (!activePageId) return;
@@ -209,7 +253,40 @@ export const useBoardData = ({ boardRef, zoomRef, maxZIndexRef }) => {
     maxZIndexRef.current = Math.max(maxZIndexRef.current, note.zIndex ?? 1);
     setNotes((prev) => [note, ...prev]);
     setSelectedId(note.id);
-  }, [activeColor, activePageId, boardRef, maxZIndexRef, service, zoomRef]);
+  }, [activeColor, activePageId, boardRef, maxZIndexRef, service, setNotes, setSelectedId, zoomRef]);
+
+  const duplicateNotes = useCallback(async (noteIds, offset = { x: 36, y: 36 }) => {
+    if (!Array.isArray(noteIds) || noteIds.length === 0) return [];
+
+    const selectedIds = new Set(noteIds);
+    const sourceNotes = notesRef.current.filter((note) => selectedIds.has(note.id));
+    if (sourceNotes.length === 0) return [];
+
+    const baseZIndex = maxZIndexRef.current;
+    const payloads = sourceNotes.map((source, index) => ({
+      color: source.color,
+      x: Math.max(0, (source.x ?? 0) + offset.x),
+      y: Math.max(0, (source.y ?? 0) + offset.y),
+      pageId: source.pageId || activePageId,
+      kind: source.kind || "note",
+      title: source.kind === "model" ? "" : source.title || "Yeni Not",
+      width: source.width,
+      height: source.height,
+      zIndex: baseZIndex + index + 1,
+      content: source.content || "",
+      isNew: false
+    }));
+
+    const created = await Promise.all(
+      payloads.map((payload) => service.addNote(payload))
+    );
+    created.forEach((next) => {
+      maxZIndexRef.current = Math.max(maxZIndexRef.current, next.zIndex ?? 1);
+    });
+
+    setNotes((prev) => [...created, ...prev]);
+    return created;
+  }, [activePageId, maxZIndexRef, service, setNotes]);
 
   const removeNote = useCallback(async (id) => {
     const previous = notesRef.current;
@@ -225,7 +302,7 @@ export const useBoardData = ({ boardRef, zoomRef, maxZIndexRef }) => {
       setSelectedId(previousSelected);
       throw new Error("Note delete failed");
     }
-  }, [selectedId, service]);
+  }, [selectedId, service, setNotes, setSelectedId]);
 
   const updateNote = useCallback(async (id, changes, optimistic = true, persist = true) => {
     const previous = notesRef.current;
@@ -243,12 +320,12 @@ export const useBoardData = ({ boardRef, zoomRef, maxZIndexRef }) => {
       }
       throw new Error("Note update failed");
     }
-  }, [service]);
+  }, [service, setNotes]);
 
   const selectPage = useCallback((id) => {
     setActivePageId(id);
-    setSelectedId(null);
-  }, []);
+    clearSelectedIds();
+  }, [clearSelectedIds, setActivePageId]);
 
   return {
     notes,
@@ -256,8 +333,6 @@ export const useBoardData = ({ boardRef, zoomRef, maxZIndexRef }) => {
     activePageId,
     activeColor,
     setActiveColor,
-    selectedId,
-    setSelectedId,
     notesRef,
     pagesRef,
     setNotes,
@@ -265,7 +340,9 @@ export const useBoardData = ({ boardRef, zoomRef, maxZIndexRef }) => {
     createNewPage,
     renamePage,
     deletePage,
+    movePage,
     createNote,
+    duplicateNotes,
     removeNote,
     updateNote,
     service
