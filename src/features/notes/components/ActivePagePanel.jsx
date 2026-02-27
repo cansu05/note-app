@@ -30,14 +30,14 @@ export const ActivePagePanel = ({ activePage, renamePage, onRequestDelete }) => 
       />
       <div className="active-page-actions">
         <button type="button" className="active-page-btn" onClick={handleRename}>
-          Ismi Kaydet
+          İsmi Kaydet
         </button>
         <button
           type="button"
           className="active-page-btn active-page-btn-danger"
           onClick={() => onRequestDelete(activePage)}
         >
-          Sayfayi Sil
+          Sayfayı Sil
         </button>
       </div>
     </div>

@@ -80,7 +80,7 @@ export const NotesPage = () => {
       setUiError("");
       closeCreatePage();
     } catch {
-      setUiError("Sayfa olusturulamadi. Lutfen tekrar dene.");
+      setUiError("Sayfa oluşturulamadı. Lütfen tekrar dene.");
     }
   };
 
@@ -89,7 +89,7 @@ export const NotesPage = () => {
       await createNote();
       setUiError("");
     } catch {
-      setUiError("Not olusturulamadi. Lutfen tekrar dene.");
+      setUiError("Not oluşturulamadı. Lütfen tekrar dene.");
     }
   };
 
@@ -98,7 +98,7 @@ export const NotesPage = () => {
       await createNote({ kind: "model" });
       setUiError("");
     } catch {
-      setUiError("Model olusturulamadi. Lutfen tekrar dene.");
+      setUiError("Model oluşturulamadı. Lütfen tekrar dene.");
     }
   };
 
@@ -173,14 +173,14 @@ export const NotesPage = () => {
                 await renamePage(id, nextName);
                 setUiError("");
               } catch {
-                setUiError("Sayfa guncellenemedi. Lutfen tekrar dene.");
+                setUiError("Sayfa güncellenemedi. Lütfen tekrar dene.");
               }
             }}
             onRequestDelete={(page) =>
               openConfirm({
-                title: "Sayfayi Sil",
-                message: `"${page.name}" sayfasi, alt sayfalari ve iclerindeki tum notlar silinecek.`,
-                confirmText: "Sayfayi Sil",
+                title: "Sayfayı Sil",
+                message: `"${page.name}" sayfası, alt sayfaları ve içlerindeki tüm notlar silinecek.`,
+                confirmText: "Sayfayı Sil",
                 onConfirm: async () => {
                   await deletePage(page.id);
                   closeConfirm();
@@ -203,7 +203,7 @@ export const NotesPage = () => {
                 }}
               >
               {notes.length === 0 ? (
-                <p className="empty-board">Bu sayfada not yok. + Not Ekle ile basla.</p>
+                <p className="empty-board">Bu sayfada not yok. + Not Ekle ile başla.</p>
               ) : null}
 
               {notes.map((note) => (
@@ -218,7 +218,7 @@ export const NotesPage = () => {
                       await commitNotePosition(note.id);
                       setUiError("");
                     } catch {
-                      setUiError("Not konumu kaydedilemedi. Lutfen tekrar dene.");
+                      setUiError("Not konumu kaydedilemedi. Lütfen tekrar dene.");
                     }
                   }}
                   onSave={async (changes) => {
@@ -226,7 +226,7 @@ export const NotesPage = () => {
                       await updateNote(note.id, changes);
                       setUiError("");
                     } catch {
-                      setUiError("Not kaydedilemedi. Lutfen tekrar dene.");
+                      setUiError("Not kaydedilemedi. Lütfen tekrar dene.");
                       throw new Error("Note save failed");
                     }
                   }}
@@ -281,7 +281,7 @@ export const NotesPage = () => {
             }
             setUiError("");
           } catch {
-            setUiError("Islem tamamlanamadi. Lutfen tekrar dene.");
+            setUiError("İşlem tamamlanamadı. Lütfen tekrar dene.");
           }
         }}
       />

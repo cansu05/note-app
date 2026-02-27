@@ -178,7 +178,7 @@ export const NoteCard = ({
                     onSelect();
                   }}
                 >
-                  Duzenle
+                  Düzenle
                 </button>
               ) : null}
               {isEditing ? (
@@ -235,7 +235,7 @@ export const NoteCard = ({
           className="note-content note-content-editor"
           contentEditable
           suppressContentEditableWarning
-          data-placeholder="Buraya notunu yaz. Liste stili secip hemen uygulayabilirsin."
+          data-placeholder="Buraya notunu yaz. Liste stili seçip hemen uygulayabilirsin."
           onPointerDown={handleFieldPointerDown}
           onKeyDown={handleEditorKeyDown}
           onInput={(e) => setDraftContent(normalizeHtml(e.currentTarget.innerHTML))}

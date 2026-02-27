@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { NOTE_COLORS } from "../../../domain/note";
+import { auth } from "../../../lib/firebase";
 import { FirebasePageRepository } from "../../../repositories/FirebasePageRepository";
 import { FirebaseNoteRepository } from "../../../repositories/FirebaseNoteRepository";
 import { createNoteService } from "../../../services/noteService";
@@ -14,6 +15,7 @@ import { clamp } from "../utils/noteSizing";
 
 const LEGACY_NOTES_STORAGE_KEY = "note_app_notes";
 const LEGACY_PAGES_STORAGE_KEY = "note_app_pages";
+const LEGACY_OWNER_UID_KEY = "note_app_legacy_owner_uid";
 
 const createPage = (index = 1, parentId = null) => ({
   id: crypto.randomUUID(),
@@ -88,6 +90,30 @@ const loadLegacyLocalData = () => {
   return { notes: legacyNotes, pages: legacyPages };
 };
 
+const getLegacyDataForCurrentUser = (uid) => {
+  if (typeof window === "undefined" || !uid) {
+    return { notes: [], pages: [] };
+  }
+
+  const legacy = loadLegacyLocalData();
+  const hasLegacyData = legacy.notes.length > 0 || legacy.pages.length > 0;
+  if (!hasLegacyData) {
+    return { notes: [], pages: [] };
+  }
+
+  const ownerUid = localStorage.getItem(LEGACY_OWNER_UID_KEY);
+  if (!ownerUid) {
+    localStorage.setItem(LEGACY_OWNER_UID_KEY, uid);
+    return legacy;
+  }
+
+  if (ownerUid === uid) {
+    return legacy;
+  }
+
+  return { notes: [], pages: [] };
+};
+
 export const useNotesBoard = () => {
   const service = useMemo(() => {
     const repository = new FirebaseNoteRepository();
@@ -136,9 +162,10 @@ export const useNotesBoard = () => {
 
     const load = async () => {
       try {
+        const currentUid = auth.currentUser?.uid;
         const remotePages = await pageRepository.list();
         const remoteNotes = await service.listNotes();
-        const legacy = loadLegacyLocalData();
+        const legacy = getLegacyDataForCurrentUser(currentUid);
 
         const pagesToImport = legacy.pages.filter((page) => page?.id);
         const notesToImport = legacy.notes.filter((note) => note?.id);

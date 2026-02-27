@@ -1,7 +1,13 @@
 import { get, ref, remove, set } from "firebase/database";
-import { db } from "../lib/firebase";
+import { auth, db } from "../lib/firebase";
 
-const PAGES_PATH = "pages";
+const userPagesPath = () => {
+  const uid = auth.currentUser?.uid;
+  if (!uid) {
+    throw new Error("User not authenticated");
+  }
+  return `users/${uid}/pages`;
+};
 
 const toList = (snapshotValue) => {
   if (!snapshotValue || typeof snapshotValue !== "object") {
@@ -13,24 +19,28 @@ const toList = (snapshotValue) => {
 
 export class FirebasePageRepository {
   async list() {
-    const snapshot = await get(ref(db, PAGES_PATH));
+    const pagesPath = userPagesPath();
+    const snapshot = await get(ref(db, pagesPath));
     return toList(snapshot.val());
   }
 
   async create(page) {
-    await set(ref(db, `${PAGES_PATH}/${page.id}`), page);
+    const pagesPath = userPagesPath();
+    await set(ref(db, `${pagesPath}/${page.id}`), page);
     return page;
   }
 
   async update(id, changes) {
-    const current = await get(ref(db, `${PAGES_PATH}/${id}`));
+    const pagesPath = userPagesPath();
+    const current = await get(ref(db, `${pagesPath}/${id}`));
     const currentValue = current.val() || {};
     const payload = { ...currentValue, ...changes, updatedAt: new Date().toISOString() };
-    await set(ref(db, `${PAGES_PATH}/${id}`), payload);
+    await set(ref(db, `${pagesPath}/${id}`), payload);
     return payload;
   }
 
   async remove(id) {
-    await remove(ref(db, `${PAGES_PATH}/${id}`));
+    const pagesPath = userPagesPath();
+    await remove(ref(db, `${pagesPath}/${id}`));
   }
 }

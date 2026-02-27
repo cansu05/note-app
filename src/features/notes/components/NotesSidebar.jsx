@@ -25,7 +25,7 @@ export const NotesSidebar = ({
               className="create-subpage"
               onClick={() => onRequestCreateSubPage(page.id)}
               title="Alt sayfa ekle"
-              aria-label={`${page.name} icin alt sayfa ekle`}
+              aria-label={`${page.name} için alt sayfa ekle`}
             >
               +
             </button>
