@@ -21,19 +21,6 @@ Modern bir not uygulamasi. Kullanicilar sayfalar olusturabilir, not ekleyebilir,
 - CSS
 - Firebase
 
-## ?? Proje Yapisi
-
-```txt
-src/
-  domain/
-  features/notes/
-    components/
-    hooks/
-    utils/
-  repositories/
-  services/
-```
-
 ## ? Kurulum
 
 ```bash
@@ -41,17 +28,4 @@ npm install
 npm run dev
 ```
 
-## ?? Build
 
-```bash
-npm run build
-npm run preview
-```
-
-## ?? GitHub'a Gonderme
-
-```bash
-git add .
-git commit -m "docs: update README for firebase"
-git push
-```
