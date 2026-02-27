@@ -1,5 +1,3 @@
-export const PAGES_STORAGE_KEY = "note_app_pages";
-
 export const DEFAULT_NOTE_WIDTH = 450;
 export const DEFAULT_NOTE_HEIGHT = 180;
 

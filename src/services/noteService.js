@@ -26,5 +26,3 @@ export class NoteService {
 export const createNoteService = ({ repository }) => {
   return new NoteService(repository);
 };
-
-// Firebase'e geçişte LocalNoteRepository yerine burada FirebaseNoteRepository verilecek.

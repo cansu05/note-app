@@ -74,9 +74,9 @@ export const NotesPage = () => {
     setCreatePageState({ isOpen: false, draftName: "", parentPageId: null });
   };
 
-  const submitCreatePage = () => {
+  const submitCreatePage = async () => {
     try {
-      createNewPage(createPageState.draftName, createPageState.parentPageId);
+      await createNewPage(createPageState.draftName, createPageState.parentPageId);
       setUiError("");
       closeCreatePage();
     } catch {
@@ -118,7 +118,7 @@ export const NotesPage = () => {
     const viewport = boardRef.current;
     const viewportWidth = viewport?.clientWidth ?? 1200;
     const viewportHeight = viewport?.clientHeight ?? 760;
-    const padding = 360;
+    const padding = 140;
 
     const maxRight = notes.reduce(
       (max, note) => Math.max(max, (note.x ?? 0) + (note.width ?? 0)),
@@ -168,7 +168,14 @@ export const NotesPage = () => {
         <section className="board-column">
           <ActivePagePanel
             activePage={activePage}
-            renamePage={renamePage}
+            renamePage={async (id, nextName) => {
+              try {
+                await renamePage(id, nextName);
+                setUiError("");
+              } catch {
+                setUiError("Sayfa guncellenemedi. Lutfen tekrar dene.");
+              }
+            }}
             onRequestDelete={(page) =>
               openConfirm({
                 title: "Sayfayi Sil",

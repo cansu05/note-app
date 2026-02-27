@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { NOTE_COLORS } from "../../../domain/note";
-import { LocalNoteRepository } from "../../../repositories/LocalNoteRepository";
+import { FirebasePageRepository } from "../../../repositories/FirebasePageRepository";
+import { FirebaseNoteRepository } from "../../../repositories/FirebaseNoteRepository";
 import { createNoteService } from "../../../services/noteService";
 import {
   DEFAULT_NOTE_HEIGHT,
   DEFAULT_NOTE_WIDTH,
   MAX_NOTE_WIDTH,
   MIN_NOTE_HEIGHT,
-  MIN_NOTE_WIDTH,
-  PAGES_STORAGE_KEY
+  MIN_NOTE_WIDTH
 } from "../constants";
 import { clamp } from "../utils/noteSizing";
+
+const LEGACY_NOTES_STORAGE_KEY = "note_app_notes";
+const LEGACY_PAGES_STORAGE_KEY = "note_app_pages";
 
 const createPage = (index = 1, parentId = null) => ({
   id: crypto.randomUUID(),
@@ -19,17 +22,6 @@ const createPage = (index = 1, parentId = null) => ({
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString()
 });
-
-const safeParsePages = (raw) => {
-  if (!raw) return [];
-
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
 
 const normalizePages = (pages) =>
   pages.map((page) => ({
@@ -66,19 +58,42 @@ const normalizeNoteDimensions = (note) => ({
 });
 
 const MODEL_NOTE_WIDTH = 380;
-const persistPages = (pages) => {
+const safeParseArray = (raw) => {
+  if (!raw) return [];
   try {
-    localStorage.setItem(PAGES_STORAGE_KEY, JSON.stringify(pages));
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
-    throw new Error("Pages persistence failed");
+    return [];
   }
+};
+
+const mergeById = (primary = [], incoming = []) => {
+  const map = new Map(primary.map((item) => [item.id, item]));
+  incoming.forEach((item) => {
+    if (item?.id && !map.has(item.id)) {
+      map.set(item.id, item);
+    }
+  });
+  return Array.from(map.values());
+};
+
+const loadLegacyLocalData = () => {
+  if (typeof window === "undefined") {
+    return { notes: [], pages: [] };
+  }
+
+  const legacyNotes = safeParseArray(localStorage.getItem(LEGACY_NOTES_STORAGE_KEY));
+  const legacyPages = safeParseArray(localStorage.getItem(LEGACY_PAGES_STORAGE_KEY));
+  return { notes: legacyNotes, pages: legacyPages };
 };
 
 export const useNotesBoard = () => {
   const service = useMemo(() => {
-    const repository = new LocalNoteRepository();
+    const repository = new FirebaseNoteRepository();
     return createNoteService({ repository });
   }, []);
+  const pageRepository = useMemo(() => new FirebasePageRepository(), []);
 
   const [notes, setNotes] = useState([]);
   const [pages, setPages] = useState([]);
@@ -121,20 +136,39 @@ export const useNotesBoard = () => {
 
     const load = async () => {
       try {
-      const savedPagesRaw = localStorage.getItem(PAGES_STORAGE_KEY);
-      const savedPages = safeParsePages(savedPagesRaw);
-      const normalizedPages =
-        savedPages.length > 0 ? normalizePages(savedPages) : [createPage(1)];
+        const remotePages = await pageRepository.list();
+        const remoteNotes = await service.listNotes();
+        const legacy = loadLegacyLocalData();
 
-        if (savedPages.length === 0) {
-          persistPages(normalizedPages);
+        const pagesToImport = legacy.pages.filter((page) => page?.id);
+        const notesToImport = legacy.notes.filter((note) => note?.id);
+
+        const mergedPages = mergeById(remotePages, pagesToImport);
+        const mergedNotes = mergeById(remoteNotes, notesToImport);
+
+        if (mergedPages.length !== remotePages.length) {
+          const remotePageIds = new Set(remotePages.map((page) => page.id));
+          const missingPages = mergedPages.filter((page) => !remotePageIds.has(page.id));
+          await Promise.all(missingPages.map((page) => pageRepository.create(page)));
         }
 
+        if (mergedNotes.length !== remoteNotes.length) {
+          const remoteNoteIds = new Set(remoteNotes.map((note) => note.id));
+          const missingNotes = mergedNotes.filter((note) => !remoteNoteIds.has(note.id));
+          await Promise.all(missingNotes.map((note) => service.addNote(note)));
+        }
+
+        const savedPages = mergedPages.length > 0 ? mergedPages : [createPage(1)];
+        if (mergedPages.length === 0) {
+          await pageRepository.create(savedPages[0]);
+        }
+
+        const normalizedPages = normalizePages(savedPages);
         if (cancelled) return;
         setPages(normalizedPages);
         setActivePageId(normalizedPages[0].id);
 
-        const data = await service.listNotes();
+        const data = mergedNotes.length > 0 ? mergedNotes : await service.listNotes();
         if (cancelled) return;
 
         const notesWithoutPage = data.filter((n) => !n.pageId);
@@ -174,9 +208,9 @@ export const useNotesBoard = () => {
     return () => {
       cancelled = true;
     };
-  }, [service]);
+  }, [pageRepository, service]);
 
-  const createNewPage = (name, parentId = null) => {
+  const createNewPage = async (name, parentId = null) => {
     const safeName = (name || "").trim();
     const nextId = crypto.randomUUID();
     const currentPages = pagesRef.current;
@@ -188,25 +222,30 @@ export const useNotesBoard = () => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    const updated = [...currentPages, next];
-    persistPages(updated);
-    setPages(updated);
 
+    await pageRepository.create(next);
+    setPages([...currentPages, next]);
     setActivePageId(nextId);
   };
 
-  const renamePage = (id, nextName) => {
+  const renamePage = async (id, nextName) => {
     const safeName = (nextName || "").trim();
     if (!safeName) return;
 
-    const updated = pagesRef.current.map((page) =>
+    const previous = pagesRef.current;
+    const updated = previous.map((page) =>
       page.id === id
         ? { ...page, name: safeName, updatedAt: new Date().toISOString() }
         : page
     );
 
-    persistPages(updated);
     setPages(updated);
+    try {
+      await pageRepository.update(id, { name: safeName });
+    } catch {
+      setPages(previous);
+      throw new Error("Page rename failed");
+    }
   };
 
   const deletePage = async (id) => {
@@ -217,17 +256,18 @@ export const useNotesBoard = () => {
       setNotes((prev) => prev.filter((note) => !pageIdsToDelete.has(note.pageId)));
     }
 
+    await Promise.all(Array.from(pageIdsToDelete).map((pageId) => pageRepository.remove(pageId)));
+
     const remainingPages = pagesRef.current.filter((page) => !pageIdsToDelete.has(page.id));
     if (remainingPages.length === 0) {
       const fallback = createPage(1);
-      persistPages([fallback]);
+      await pageRepository.create(fallback);
       setPages([fallback]);
       setActivePageId(fallback.id);
       setSelectedId(null);
       return;
     }
 
-    persistPages(remainingPages);
     setPages(remainingPages);
 
     if (activePageId && pageIdsToDelete.has(activePageId)) {
@@ -357,8 +397,8 @@ export const useNotesBoard = () => {
     const target = notesRef.current.find((n) => n.id === id);
     if (!target) return;
 
-    const canvasWidth = Math.max(board.scrollWidth / zoom, board.clientWidth / zoom + 1400);
-    const canvasHeight = Math.max(board.scrollHeight / zoom, board.clientHeight / zoom + 1000);
+    const canvasWidth = Math.max(board.scrollWidth / zoom, board.clientWidth / zoom + 500);
+    const canvasHeight = Math.max(board.scrollHeight / zoom, board.clientHeight / zoom + 320);
     const maxX = canvasWidth - target.width;
     const maxY = canvasHeight - target.height;
 
