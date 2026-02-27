@@ -26,13 +26,13 @@ export const CreatePageModal = ({
     <div className="modal-backdrop" role="dialog" aria-modal="true">
       <div className="confirm-modal create-page-modal">
         <h3>Yeni Sayfa</h3>
-        <p>Sayfa ad\u0131n\u0131 gir ve istersen \u00fcst sayfa se\u00e7erek alt sayfa olu\u015ftur.</p>
+        <p>Sayfa adını gir ve istersen üst sayfa seçerek alt sayfa oluştur.</p>
         <select
           className="create-page-select"
           value={parentPageId ?? ""}
           onChange={(e) => onChangeParentPage(e.target.value || null)}
         >
-          <option value="">\u00dcst seviye sayfa</option>
+          <option value="">Üst seviye sayfa</option>
           {pageOptions.map((page) => (
             <option key={page.id} value={page.id}>
               {page.label}
@@ -43,7 +43,7 @@ export const CreatePageModal = ({
           className="create-page-input"
           value={draftName}
           onChange={(e) => onChangeName(e.target.value)}
-          placeholder="\u00d6rn: G\u00fcnl\u00fck, \u0130\u015f, Fikirler"
+          placeholder="Örn: Günlük, İş, Fikirler"
           autoFocus
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -53,10 +53,10 @@ export const CreatePageModal = ({
         />
         <div className="confirm-modal-actions">
           <button type="button" className="confirm-cancel" onClick={onCancel}>
-            Vazge\u00e7
+            Vazgeç
           </button>
           <button type="button" className="confirm-delete" onClick={onCreate}>
-            Sayfay\u0131 Olu\u015ftur
+            Sayfayı Oluştur
           </button>
         </div>
       </div>

@@ -8,7 +8,7 @@ export const ConfirmModal = ({ isOpen, title, message, confirmText, onCancel, on
         <p>{message}</p>
         <div className="confirm-modal-actions">
           <button type="button" className="confirm-cancel" onClick={onCancel}>
-            Vazge\u00e7
+            Vazgeç
           </button>
           <button type="button" className="confirm-delete" onClick={onConfirm}>
             {confirmText}
