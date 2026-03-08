@@ -452,12 +452,14 @@
   overflow: hidden;
   overflow-wrap: anywhere;
   word-break: break-word;
+  line-height: 1.45;
 }
 
 .note-content-editor {
   outline: none;
   white-space: pre-wrap;
   min-height: 92px;
+  overflow: auto;
 }
 
 .note-content-editor:empty::before {
@@ -465,18 +467,29 @@
   color: rgba(42, 37, 33, 0.65);
 }
 
-.note-content-view p {
-  margin: 0 0 6px;
+.note-content p,
+.note-content ul,
+.note-content ol {
+  margin-top: 0;
+  margin-bottom: 10px;
 }
 
-.note-content-view ul,
-.note-content-view ol {
-  margin: 0 0 6px 18px;
+.note-content ul,
+.note-content ol {
+  margin-left: 18px;
   padding: 0;
 }
 
-.note-content-view li {
-  margin-bottom: 3px;
+.note-content li {
+  margin-bottom: 6px;
+}
+
+.note-content li:last-child {
+  margin-bottom: 0;
+}
+
+.note-content > :last-child {
+  margin-bottom: 0;
 }
 
 .note-content ul[data-marker] {
@@ -487,7 +500,7 @@
 
 .note-content ul[data-marker] li {
   position: relative;
-  padding-left: 20px;
+  padding-left: 24px;
 }
 
 .note-content ul[data-marker] li::before {
@@ -495,6 +508,8 @@
   position: absolute;
   left: 0;
   top: 0;
+  width: 18px;
+  text-align: center;
 }
 
 .note-content ul[data-marker="pink-heart"] li::before {

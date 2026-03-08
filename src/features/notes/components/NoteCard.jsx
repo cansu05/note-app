@@ -28,6 +28,7 @@ export const NoteCard = memo(({
     syncSize,
     applyFormat,
     applyListStyle,
+    handleEditorPaste,
     handleEditorKeyDown,
     formatButtons
   } = useNoteEditor({
@@ -239,6 +240,7 @@ export const NoteCard = memo(({
           data-placeholder="Buraya notunu yaz. Liste stili seçip hemen uygulayabilirsin."
           onPointerDown={handleFieldPointerDown}
           onKeyDown={handleEditorKeyDown}
+          onPaste={handleEditorPaste}
           onInput={(e) => setDraftContent(normalizeHtml(e.currentTarget.innerHTML))}
         />
       ) : (

@@ -2,9 +2,21 @@ import { useEffect, useRef } from "react";
 import { NOTES_UI_ERRORS, NOTES_UI_TEXT } from "../notesMessages";
 
 const isEditableTarget = (target) => {
-  if (!(target instanceof HTMLElement)) return false;
-  if (target.isContentEditable) return true;
-  return Boolean(target.closest("input, textarea, [contenteditable='true']"));
+  const targetElement = target instanceof HTMLElement ? target : null;
+  const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const selectionAnchor = window.getSelection()?.anchorNode;
+  const selectionElement =
+    selectionAnchor?.nodeType === Node.TEXT_NODE
+      ? selectionAnchor.parentElement
+      : selectionAnchor instanceof HTMLElement
+        ? selectionAnchor
+        : null;
+
+  const candidates = [targetElement, activeElement, selectionElement].filter(Boolean);
+  return candidates.some((element) => {
+    if (element.isContentEditable) return true;
+    return Boolean(element.closest("input, textarea, [contenteditable='true']"));
+  });
 };
 
 export const useBoardKeyboardShortcuts = ({

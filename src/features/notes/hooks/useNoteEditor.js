@@ -8,18 +8,11 @@ import {
 import { getAutoSize } from "../utils/noteSizing";
 import { htmlToText, normalizeHtml } from "../utils/richText";
 
-const getMarkerList = (selection, root) => {
+const getMarkerList = (selection) => {
   const anchorNode = selection?.anchorNode;
   const anchorElement =
     anchorNode?.nodeType === Node.TEXT_NODE ? anchorNode.parentElement : anchorNode;
-  let list = anchorElement?.closest?.("ul") ?? null;
-
-  if (!list && root) {
-    const allLists = root.querySelectorAll("ul");
-    list = allLists.length > 0 ? allLists[allLists.length - 1] : null;
-  }
-
-  return list;
+  return anchorElement?.closest?.("ul") ?? null;
 };
 
 const placeCaretInside = (element) => {
@@ -228,7 +221,7 @@ export const useNoteEditor = ({
       return;
     }
 
-    list = list ? replaceListTag(list, "ul") : getMarkerList(selection, editorRef.current);
+    list = list ? replaceListTag(list, "ul") : getMarkerList(selection);
     if (!list) {
       list = createListFromSelection("ul");
     }
@@ -248,6 +241,13 @@ export const useNoteEditor = ({
     setDraftContent(normalizeHtml(editorRef.current.innerHTML));
   };
 
+  const handleEditorPaste = () => {
+    if (!editorRef.current) return;
+    requestAnimationFrame(() => {
+      setDraftContent(normalizeHtml(editorRef.current.innerHTML));
+    });
+  };
+
   const formatButtons = LIST_STYLE_OPTIONS;
 
   return {
@@ -255,6 +255,7 @@ export const useNoteEditor = ({
     syncSize,
     applyFormat,
     applyListStyle,
+    handleEditorPaste,
     handleEditorKeyDown,
     formatButtons
   };
