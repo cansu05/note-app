@@ -68,6 +68,22 @@ const sanitizeNode = (doc, node) => {
     }
   }
 
+  if (tag === "ol") {
+    const startAttr = node.getAttribute("start");
+    const startValue = Number.parseInt(startAttr ?? "", 10);
+    if (Number.isFinite(startValue) && startValue > 1) {
+      clean.setAttribute("start", String(startValue));
+    }
+  }
+
+  if (tag === "li") {
+    const valueAttr = node.getAttribute("value");
+    const value = Number.parseInt(valueAttr ?? "", 10);
+    if (Number.isFinite(value) && value > 0) {
+      clean.setAttribute("value", String(value));
+    }
+  }
+
   node.childNodes.forEach((child) => {
     clean.appendChild(sanitizeNode(doc, child));
   });

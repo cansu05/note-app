@@ -11,6 +11,7 @@ export const useBoardInteractions = ({
   service,
   maxZIndexRef
 }) => {
+  const MIN_CANVAS_OFFSET = -320;
   const pendingPositionRef = useRef(new Map());
   const pendingResizeRef = useRef(new Map());
   const resizeFrameRef = useRef(new Map());
@@ -134,8 +135,8 @@ export const useBoardInteractions = ({
 
         const maxX = canvasWidth - target.width;
         const maxY = canvasHeight - target.height;
-        const nextX = clamp(target.x + dx, 0, Math.max(maxX, 0));
-        const nextY = clamp(target.y + dy, 0, Math.max(maxY, 0));
+        const nextX = clamp(target.x + dx, MIN_CANVAS_OFFSET, Math.max(maxX, MIN_CANVAS_OFFSET));
+        const nextY = clamp(target.y + dy, MIN_CANVAS_OFFSET, Math.max(maxY, MIN_CANVAS_OFFSET));
 
         const existingPending = pendingPositionRef.current.get(movingId);
         const previousPosition = existingPending

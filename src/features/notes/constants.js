@@ -5,7 +5,7 @@ export const MIN_NOTE_WIDTH = 450;
 export const MIN_NOTE_HEIGHT = 130;
 
 export const MAX_NOTE_WIDTH = 560;
-export const MAX_NOTE_HEIGHT = 640;
+export const MAX_NOTE_HEIGHT = 600;
 
 export const LIST_STYLE_OPTIONS = [
   { value: "choose", label: "Liste stili seç" },

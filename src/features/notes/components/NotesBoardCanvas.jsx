@@ -4,12 +4,6 @@ import { useBoardUiStore } from "../store/useBoardUiStore";
 import { useBoardKeyboardShortcuts } from "../hooks/useBoardKeyboardShortcuts";
 import { NoteCard } from "./NoteCard";
 
-const isEditableTarget = (target) => {
-  if (!(target instanceof HTMLElement)) return false;
-  if (target.isContentEditable) return true;
-  return Boolean(target.closest("input, textarea, [contenteditable='true']"));
-};
-
 export const NotesBoardCanvas = memo(({
   notes,
   selectedId,
@@ -82,14 +76,15 @@ export const NotesBoardCanvas = memo(({
 
   useEffect(() => {
     const onKeyDown = (event) => {
-      if (event.code !== "Space") return;
-      if (isEditableTarget(event.target)) return;
+      const isAltPan = event.code === "AltLeft" || event.code === "AltRight";
+      if (!isAltPan) return;
       event.preventDefault();
       setIsSpacePressed(true);
     };
 
     const onKeyUp = (event) => {
-      if (event.code !== "Space") return;
+      const isAltPan = event.code === "AltLeft" || event.code === "AltRight";
+      if (!isAltPan) return;
       setIsSpacePressed(false);
       panStateRef.current.active = false;
       setIsPanning(false);
@@ -101,11 +96,11 @@ export const NotesBoardCanvas = memo(({
       setIsPanning(false);
     };
 
-    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keydown", onKeyDown, true);
     window.addEventListener("keyup", onKeyUp);
     window.addEventListener("blur", onBlur);
     return () => {
-      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keydown", onKeyDown, true);
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("blur", onBlur);
     };

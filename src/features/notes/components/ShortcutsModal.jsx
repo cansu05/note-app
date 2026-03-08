@@ -4,28 +4,28 @@ export const ShortcutsModal = ({ isOpen, onClose }) => {
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true">
       <div className="confirm-modal shortcuts-modal">
-        <h3>Kısayollar</h3>
+        <h3>Kisayollar</h3>
         <ul className="shortcuts-list">
           <li>
-            <kbd>Shift</kbd> + tık: Çoklu seçim
+            <kbd>Shift</kbd> + tik: Coklu secim
           </li>
           <li>
-            <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + tık: Çoklu seçim (ekle/çıkar)
+            <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + tik: Coklu secim (ekle/cikar)
           </li>
-          <li>Seçili notlardan birini sürükle: Tüm seçili notlar birlikte taşınır</li>
+          <li>Secili notlardan birini surukle: Tum secili notlar birlikte tasinir</li>
           <li>
-            <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>C</kbd>: Seçili notları kopyala
-          </li>
-          <li>
-            <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>V</kbd>: Yapıştır
+            <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>C</kbd>: Secili notlari kopyala
           </li>
           <li>
-            <kbd>Delete</kbd>/<kbd>Backspace</kbd>: Seçili notları sil
+            <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>V</kbd>: Yapistir
           </li>
           <li>
-            <kbd>Space</kbd> basılı tut + sürükle: Canvas içinde hand ile gez
+            <kbd>Delete</kbd>/<kbd>Backspace</kbd>: Secili notlari sil
           </li>
-          <li>Seçili not varken üstteki renklerden tıkla: Toplu renk değiştir</li>
+          <li>
+            <kbd>Alt</kbd> basili tut + surukle: Canvas icinde hand ile gez
+          </li>
+          <li>Secili not varken ustteki renklerden tikla: Toplu renk degistir</li>
         </ul>
         <div className="confirm-modal-actions">
           <button type="button" className="confirm-cancel" onClick={onClose}>

@@ -1,4 +1,5 @@
 ﻿import { memo, useEffect, useRef, useState } from "react";
+import { MAX_NOTE_HEIGHT, MIN_NOTE_HEIGHT } from "../constants";
 import { getAutoSize } from "../utils/noteSizing";
 import { htmlToText, normalizeHtml } from "../utils/richText";
 import { useNoteEditor } from "../hooks/useNoteEditor";
@@ -112,13 +113,19 @@ export const NoteCard = memo(({
       htmlToText(normalizedContent),
       getMaxWidthByBoard()
     );
+    const contentHeight = Math.ceil(editorRef.current?.scrollHeight ?? 0);
+    const chromeHeight = !isModel ? 118 : 92;
+    const measuredHeight = Math.max(MIN_NOTE_HEIGHT, contentHeight + chromeHeight);
+    const clampedHeight = Math.min(Math.max(autoSize.height, measuredHeight), MAX_NOTE_HEIGHT);
 
     try {
       await onSave({
         id: note.id,
         title: isModel ? "" : draftTitle.trim() || "Yeni Not",
         content: normalizedContent,
-        ...(isModel ? { height: autoSize.height } : autoSize),
+        ...(isModel
+          ? { height: clampedHeight }
+          : { ...autoSize, height: clampedHeight }),
         isNew: false
       });
 
@@ -130,10 +137,21 @@ export const NoteCard = memo(({
   };
 
   const handleFieldPointerDown = (e) => {
-    if (isEditing) {
+    if (isEditing && !e.altKey) {
       e.stopPropagation();
     }
   };
+
+  const editorChromeHeight = !isModel ? 118 : 92;
+  const minEditableHeight = editorChromeHeight + 92;
+  const baseHeight = note.height ?? MIN_NOTE_HEIGHT;
+  const constrainedHeight = Math.min(
+    MAX_NOTE_HEIGHT,
+    Math.max(baseHeight, isEditing ? minEditableHeight : MIN_NOTE_HEIGHT)
+  );
+  const editorMaxHeight = Math.max(92, constrainedHeight - editorChromeHeight);
+  const viewChromeHeight = !isModel ? 64 : 40;
+  const viewMaxHeight = Math.max(64, constrainedHeight - viewChromeHeight);
 
   return (
     <article
@@ -145,8 +163,8 @@ export const NoteCard = memo(({
         backgroundColor: note.color,
         width: note.width,
         zIndex: note.zIndex ?? 1,
-        minHeight: isEditing ? note.height : undefined,
-        height: isEditing ? note.height : "auto"
+        minHeight: constrainedHeight,
+        height: constrainedHeight
       }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -210,7 +228,14 @@ export const NoteCard = memo(({
       ) : null}
 
       {isEditing && !isModel ? (
-        <div className="note-editor-toolbar" onPointerDown={(e) => e.stopPropagation()}>
+        <div
+          className="note-editor-toolbar"
+          onPointerDown={(e) => {
+            if (!e.altKey) {
+              e.stopPropagation();
+            }
+          }}
+        >
           <button type="button" className="format-btn" onClick={() => applyFormat("bold")}>B</button>
           <button type="button" className="format-btn" onClick={() => applyFormat("italic")}>I</button>
           <select
@@ -218,8 +243,8 @@ export const NoteCard = memo(({
             value={listStyle}
             onChange={(e) => {
               const nextStyle = e.target.value;
-              setListStyle(nextStyle);
               applyListStyle(nextStyle);
+              setListStyle("choose");
             }}
           >
             {formatButtons.map((opt) => (
@@ -235,17 +260,32 @@ export const NoteCard = memo(({
         <div
           ref={editorRef}
           className="note-content note-content-editor"
+          style={{ maxHeight: `${editorMaxHeight}px` }}
           contentEditable
           suppressContentEditableWarning
           data-placeholder="Buraya notunu yaz. Liste stili seçip hemen uygulayabilirsin."
           onPointerDown={handleFieldPointerDown}
-          onKeyDown={handleEditorKeyDown}
-          onPaste={handleEditorPaste}
-          onInput={(e) => setDraftContent(normalizeHtml(e.currentTarget.innerHTML))}
+          onKeyDown={(e) => {
+            // Prevent literal space insertion while using pan combo in editor.
+            if (e.code === "Space" && e.altKey) {
+              e.preventDefault();
+              return;
+            }
+            handleEditorKeyDown(e);
+          }}
+          onPaste={(e) => {
+            handleEditorPaste(e);
+            requestAnimationFrame(() => syncSize());
+          }}
+          onInput={(e) => {
+            setDraftContent(normalizeHtml(e.currentTarget.innerHTML));
+            requestAnimationFrame(() => syncSize());
+          }}
         />
       ) : (
         <div
           className="note-content note-content-view"
+          style={{ maxHeight: `${viewMaxHeight}px` }}
           dangerouslySetInnerHTML={{ __html: draftContent || "<p></p>" }}
         />
       )}

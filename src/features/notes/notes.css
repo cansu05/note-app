@@ -467,6 +467,39 @@
   color: rgba(42, 37, 33, 0.65);
 }
 
+.note-content-view {
+  overflow: auto;
+}
+
+.note-content-editor,
+.note-content-view {
+  scrollbar-width: thin;
+  scrollbar-color: #8ea267 rgba(255, 255, 255, 0.45);
+}
+
+.note-content-editor::-webkit-scrollbar,
+.note-content-view::-webkit-scrollbar {
+  width: 10px;
+}
+
+.note-content-editor::-webkit-scrollbar-track,
+.note-content-view::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+}
+
+.note-content-editor::-webkit-scrollbar-thumb,
+.note-content-view::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #a7ba7a 0%, #8ea267 100%);
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+}
+
+.note-content-editor::-webkit-scrollbar-thumb:hover,
+.note-content-view::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #98ae6b 0%, #7f9359 100%);
+}
+
 .note-content p,
 .note-content ul,
 .note-content ol {
