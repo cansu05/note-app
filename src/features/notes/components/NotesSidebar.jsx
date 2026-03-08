@@ -113,9 +113,20 @@ export const NotesSidebar = ({
   const [draggedPageId, setDraggedPageId] = useState(null);
   const [dropHint, setDropHint] = useState({ targetId: null, mode: null });
 
+  const normalizedPages = useMemo(() => {
+    const uniqueById = new Map();
+    pages.forEach((page) => {
+      if (!page?.id) return;
+      if (!uniqueById.has(page.id)) {
+        uniqueById.set(page.id, page);
+      }
+    });
+    return Array.from(uniqueById.values());
+  }, [pages]);
+
   const childrenByParentId = useMemo(() => {
     const map = new Map();
-    pages.forEach((page) => {
+    normalizedPages.forEach((page) => {
       const key = page.parentId ?? ROOT_PARENT_ID;
       const siblings = map.get(key) ?? [];
       siblings.push(page);
@@ -128,7 +139,7 @@ export const NotesSidebar = ({
       );
     });
     return map;
-  }, [pages]);
+  }, [normalizedPages]);
 
   const rootPages = childrenByParentId.get(ROOT_PARENT_ID) ?? [];
 

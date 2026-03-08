@@ -1,13 +1,48 @@
-const buildPageOptions = (pages, parentId = null, depth = 0) =>
-  pages
-    .filter((page) => page.parentId === parentId)
-    .flatMap((page) => [
-      {
-        id: page.id,
-        label: `${"  ".repeat(depth)}${depth > 0 ? "- " : ""}${page.name}`
-      },
-      ...buildPageOptions(pages, page.id, depth + 1)
-    ]);
+const sortPages = (pages = []) =>
+  pages.slice().sort((a, b) => {
+    const aOrder = Number.isFinite(a?.sortOrder) ? a.sortOrder : Number.MAX_SAFE_INTEGER;
+    const bOrder = Number.isFinite(b?.sortOrder) ? b.sortOrder : Number.MAX_SAFE_INTEGER;
+    if (aOrder !== bOrder) return aOrder - bOrder;
+    return String(a?.name ?? "").localeCompare(String(b?.name ?? ""), "tr");
+  });
+
+const buildPageOptions = (pages = []) => {
+  const sortedPages = sortPages(pages);
+  const childrenByParentId = new Map();
+
+  sortedPages.forEach((page) => {
+    const key = page?.parentId ?? null;
+    const siblings = childrenByParentId.get(key) ?? [];
+    siblings.push(page);
+    childrenByParentId.set(key, siblings);
+  });
+
+  const options = [];
+  const visited = new Set();
+
+  const walk = (page, depth = 0, path = new Set()) => {
+    if (!page?.id || visited.has(page.id) || path.has(page.id)) return;
+
+    visited.add(page.id);
+    options.push({
+      id: page.id,
+      label: `${"  ".repeat(depth)}${depth > 0 ? "- " : ""}${page.name}`
+    });
+
+    const nextPath = new Set(path);
+    nextPath.add(page.id);
+    const children = childrenByParentId.get(page.id) ?? [];
+    children.forEach((child) => walk(child, depth + 1, nextPath));
+  };
+
+  const rootPages = childrenByParentId.get(null) ?? [];
+  rootPages.forEach((page) => walk(page, 0));
+
+  // Malformed/legacy data can contain unreachable or cyclic branches; render them once safely.
+  sortedPages.forEach((page) => walk(page, 0));
+
+  return options;
+};
 
 export const CreatePageModal = ({
   isOpen,

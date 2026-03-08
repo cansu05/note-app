@@ -42,7 +42,9 @@ export const useNotesPageController = ({
   }, []);
 
   const openCreatePage = useCallback((parentPageId = null) => {
-    setCreatePageState({ isOpen: true, draftName: "", parentPageId });
+    const normalizedParentId =
+      typeof parentPageId === "string" && parentPageId.trim() ? parentPageId : null;
+    setCreatePageState({ isOpen: true, draftName: "", parentPageId: normalizedParentId });
   }, []);
 
   const closeCreatePage = useCallback(() => {

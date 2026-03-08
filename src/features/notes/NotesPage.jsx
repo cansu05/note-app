@@ -73,7 +73,7 @@ export const NotesPage = () => {
           pages={board.pages}
           activePageId={board.activePageId}
           selectPage={board.selectPage}
-          onRequestCreatePage={controller.openCreatePage}
+          onRequestCreatePage={() => controller.openCreatePage(null)}
           onRequestCreateSubPage={controller.openCreatePage}
           onMovePage={controller.handleMovePage}
           isHidden={isSidebarHidden}
