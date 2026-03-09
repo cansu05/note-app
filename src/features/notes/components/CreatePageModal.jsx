@@ -58,13 +58,23 @@ export const CreatePageModal = ({
   const pageOptions = buildPageOptions(pages);
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
+    <div
+      className="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-page-title"
+      aria-describedby="create-page-description"
+    >
       <div className="confirm-modal create-page-modal">
-        <h3>Yeni Sayfa</h3>
+        <h3 id="create-page-title">Yeni Sayfa</h3>
         <p>Sayfa adını gir ve istersen üst sayfa seçerek alt sayfa oluştur.</p>
+        <p id="create-page-description" className="sr-only">
+          Yeni sayfa olusturma formu.
+        </p>
         <select
           className="create-page-select"
           value={parentPageId ?? ""}
+          aria-label="Ust sayfa secimi"
           onChange={(e) => onChangeParentPage(e.target.value || null)}
         >
           <option value="">Üst seviye sayfa</option>
@@ -77,6 +87,7 @@ export const CreatePageModal = ({
         <input
           className="create-page-input"
           value={draftName}
+          aria-label="Yeni sayfa adi"
           onChange={(e) => onChangeName(e.target.value)}
           placeholder="Örn: Günlük, İş, Fikirler"
           autoFocus

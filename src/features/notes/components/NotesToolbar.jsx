@@ -27,10 +27,12 @@ export const NotesToolbar = ({
       </div>
       <div className="zoom-controls">
         <button type="button" className="zoom-btn" onClick={onZoomOut}>
+          <span className="sr-only">Uzaklastir</span>
           -
         </button>
         <span className="zoom-value">%{Math.round(zoomLevel * 100)}</span>
         <button type="button" className="zoom-btn" onClick={onZoomIn}>
+          <span className="sr-only">Yakinlastir</span>
           +
         </button>
         <button type="button" className="zoom-reset" onClick={onZoomReset}>

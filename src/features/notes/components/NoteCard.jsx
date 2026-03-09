@@ -15,6 +15,7 @@ export const NoteCard = memo(({
   onDelete,
   boardRef
 }) => {
+  const MIN_EDITABLE_CARD_HEIGHT = 400;
   const isModel = note.kind === "model";
   const dragState = useRef({ dragging: false, x: 0, y: 0 });
   const cardRef = useRef(null);
@@ -143,7 +144,7 @@ export const NoteCard = memo(({
   };
 
   const editorChromeHeight = !isModel ? 118 : 92;
-  const minEditableHeight = editorChromeHeight + 92;
+  const minEditableHeight = Math.max(editorChromeHeight + 92, MIN_EDITABLE_CARD_HEIGHT);
   const baseHeight = note.height ?? MIN_NOTE_HEIGHT;
   const constrainedHeight = Math.min(
     MAX_NOTE_HEIGHT,
@@ -177,6 +178,7 @@ export const NoteCard = memo(({
             <input
               className="note-title"
               value={draftTitle}
+              aria-label="Not basligi"
               readOnly={!isEditing}
               onPointerDown={handleFieldPointerDown}
               onChange={(e) => setDraftTitle(e.target.value)}
@@ -236,11 +238,26 @@ export const NoteCard = memo(({
             }
           }}
         >
-          <button type="button" className="format-btn" onClick={() => applyFormat("bold")}>B</button>
-          <button type="button" className="format-btn" onClick={() => applyFormat("italic")}>I</button>
+          <button
+            type="button"
+            className="format-btn"
+            aria-label="Kalini uygula"
+            onClick={() => applyFormat("bold")}
+          >
+            B
+          </button>
+          <button
+            type="button"
+            className="format-btn"
+            aria-label="Italik uygula"
+            onClick={() => applyFormat("italic")}
+          >
+            I
+          </button>
           <select
             className="list-style-select"
             value={listStyle}
+            aria-label="Liste stili secimi"
             onChange={(e) => {
               const nextStyle = e.target.value;
               applyListStyle(nextStyle);
@@ -262,6 +279,8 @@ export const NoteCard = memo(({
           className="note-content note-content-editor"
           style={{ maxHeight: `${editorMaxHeight}px` }}
           contentEditable
+          role="textbox"
+          aria-label="Not icerigi"
           suppressContentEditableWarning
           data-placeholder="Buraya notunu yaz. Liste stili seçip hemen uygulayabilirsin."
           onPointerDown={handleFieldPointerDown}

@@ -10,7 +10,7 @@ import {
   signInWithPopup,
   updateProfile
 } from "firebase/auth";
-import { auth } from "../../../lib/firebase";
+import { auth } from "../../../lib/firebaseAuth";
 import { getAuthErrorMessage, validateAuthForm, validateEmail } from "../authMessages";
 
 export const useAuthForm = () => {

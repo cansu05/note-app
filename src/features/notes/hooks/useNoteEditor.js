@@ -401,6 +401,7 @@ export const useNoteEditor = ({
   onResize,
   setDraftContent
 }) => {
+  const MIN_EDITABLE_CARD_HEIGHT = 400;
   const getMaxWidthByBoard = useCallback(() => {
     const board = boardRef?.current;
     return board
@@ -413,7 +414,11 @@ export const useNoteEditor = ({
     if (!card) return;
     const contentBox = editorRef.current ?? card.querySelector(".note-content");
 
-    const plainContent = htmlToText(draftContent);
+    const currentHtml =
+      isEditing && editorRef.current
+        ? normalizeHtml(editorRef.current.innerHTML)
+        : draftContent;
+    const plainContent = htmlToText(currentHtml);
     const autoSize = getAutoSize(draftTitle, plainContent, getMaxWidthByBoard());
 
     if (!lockAutoWidth && autoSize.width !== note.width) {
@@ -422,9 +427,10 @@ export const useNoteEditor = ({
 
     const contentHeight = contentBox ? Math.ceil(contentBox.scrollHeight) : 0;
     const chromeHeight = isEditing ? (hasTitle ? 118 : 92) : (hasTitle ? 64 : 40);
-    const measuredHeight = Math.max(MIN_NOTE_HEIGHT, contentHeight + chromeHeight);
+    const minHeightByMode = isEditing ? MIN_EDITABLE_CARD_HEIGHT : MIN_NOTE_HEIGHT;
+    const measuredHeight = Math.max(minHeightByMode, contentHeight + chromeHeight);
     const targetHeight = Math.max(measuredHeight, autoSize.height);
-    const nextHeight = Math.min(MAX_NOTE_HEIGHT, Math.max(MIN_NOTE_HEIGHT, targetHeight));
+    const nextHeight = Math.min(MAX_NOTE_HEIGHT, Math.max(minHeightByMode, targetHeight));
     if (nextHeight !== note.height) {
       onResize({ height: nextHeight });
     }

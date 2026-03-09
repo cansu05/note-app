@@ -9,16 +9,16 @@ export const NOTE_COLORS = [
 ];
 
 export const createNewNote = (partial = {}) => ({
-  id: crypto.randomUUID(),
-  kind: "note",
-  title: "Yeni Not",
-  content: "",
-  color: NOTE_COLORS[0],
-  x: 24,
-  y: 24,
-  width: 450,
-  height: 220,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  ...partial
+    id: crypto.randomUUID(),
+    kind: "note",
+    title: "Yeni Not",
+    content: "",
+    color: NOTE_COLORS[0],
+    x: 24,
+    y: 24,
+    width: 450,
+    height: 220,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    ...partial
 });

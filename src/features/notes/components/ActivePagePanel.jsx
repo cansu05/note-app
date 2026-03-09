@@ -21,6 +21,7 @@ export const ActivePagePanel = ({ activePage, renamePage, onRequestDelete }) => 
       <input
         className="active-page-input"
         value={draftName}
+        aria-label="Aktif sayfa adi"
         onChange={(e) => setDraftName(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter") {

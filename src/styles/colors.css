@@ -1,0 +1,75 @@
+:root {
+  --color-bg-start: #f0e8de;
+  --color-bg-1: #e8dfd5;
+  --color-bg-2: #d4c6b7;
+
+  --color-ink-900: #1f1c1a;
+  --color-ink-800: #2a2521;
+  --color-ink-750: #2f2a25;
+  --color-ink-700: #3d342d;
+  --color-ink-650: #3f3a35;
+  --color-ink-600: #403730;
+  --color-ink-550: #4a423b;
+  --color-ink-500: #5a4f46;
+
+  --color-white: #ffffff;
+  --color-white-90: rgba(255, 255, 255, 0.9);
+  --color-white-88: rgba(255, 255, 255, 0.88);
+  --color-white-86: rgba(255, 255, 255, 0.86);
+  --color-white-80: rgba(255, 255, 255, 0.8);
+  --color-white-75: rgba(255, 255, 255, 0.75);
+  --color-white-72: rgba(255, 255, 255, 0.72);
+  --color-white-70: rgba(255, 255, 255, 0.7);
+  --color-white-45: rgba(255, 255, 255, 0.45);
+  --color-white-35: rgba(255, 255, 255, 0.35);
+  --color-white-25: rgba(255, 255, 255, 0.25);
+
+  --color-ivory-100: #fffefb;
+  --color-ivory-200: #fffdf9;
+  --color-ivory-300: #fffaf2;
+
+  --color-sand-100: #f2eadb;
+  --color-sand-150: #efe5d4;
+  --color-sand-200: #ece3d2;
+  --color-sand-300: #f0ddcc;
+  --color-sand-400: #e6d0bc;
+
+  --color-olive-100: #a7ba7a;
+  --color-olive-200: #9faa74;
+  --color-olive-300: #8ea267;
+  --color-olive-400: #8f9b66;
+  --color-olive-500: #83985d;
+  --color-olive-600: #7f9359;
+  --color-olive-700: #98ae6b;
+
+  --color-earth-100: #d7d0b3;
+  --color-earth-200: #c8be9d;
+
+  --color-pink-100: #f9e5ea;
+  --color-pink-200: #f5d8e0;
+  --color-pink-300: #f4c7d0;
+  --color-pink-400: #edb7c3;
+  --color-pink-500: #c66f80;
+  --color-pink-600: #7a1f34;
+  --color-pink-700: #6b2535;
+
+  --color-info-600: #23564d;
+  --color-info-100: #e7f7f3;
+  --color-info-200: #dff4ee;
+
+  --color-danger-100: #fdecef;
+  --color-danger-200: #fbe3e8;
+
+  --line-soft: rgba(77, 67, 59, 0.14);
+  --line-default: rgba(77, 67, 59, 0.18);
+  --line-strong: rgba(77, 67, 59, 0.25);
+
+  --btn-soft: var(--color-pink-300);
+  --btn-soft-hover: var(--color-pink-400);
+  --btn-olive: var(--color-olive-200);
+  --btn-olive-hover: var(--color-olive-400);
+  --btn-earth: var(--color-earth-100);
+  --btn-earth-hover: var(--color-earth-200);
+  --btn-text-dark: var(--color-ink-750);
+  --btn-text-light: var(--color-ivory-200);
+}

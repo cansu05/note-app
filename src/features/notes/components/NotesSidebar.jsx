@@ -230,6 +230,7 @@ export const NotesSidebar = ({
             + Sayfa
           </button>
           <button type="button" className="sidebar-hide-btn" onClick={onToggleSidebar}>
+            <span className="sr-only">Sayfalari gizle</span>
             <FiChevronLeft size={16} />
           </button>
         </div>

@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { NOTE_COLORS } from "../../../domain/note";
-import { auth } from "../../../lib/firebase";
+import { auth } from "../../../lib/firebaseAuth";
 import { FirebasePageRepository } from "../../../repositories/FirebasePageRepository";
 import { FirebaseNoteRepository } from "../../../repositories/FirebaseNoteRepository";
 import { createNoteService } from "../../../services/noteService";
-import { DEFAULT_NOTE_HEIGHT, DEFAULT_NOTE_WIDTH } from "../constants";
+import {
+  DEFAULT_NOTE_HEIGHT,
+  DEFAULT_NOTE_WIDTH
+} from "../constants";
 import { useBoardDataStore } from "../store/useBoardDataStore";
 import { useBoardUiStore } from "../store/useBoardUiStore";
 import {

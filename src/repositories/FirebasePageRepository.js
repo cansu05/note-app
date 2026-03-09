@@ -1,5 +1,6 @@
 import { get, ref, remove, set, update } from "firebase/database";
-import { auth, db } from "../lib/firebase";
+import { auth } from "../lib/firebaseAuth";
+import { db } from "../lib/firebaseDb";
 
 const userPagesPath = () => {
   const uid = auth.currentUser?.uid;

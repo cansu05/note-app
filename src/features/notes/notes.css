@@ -209,7 +209,7 @@
 .active-page-label {
   font-size: 12px;
   font-weight: 700;
-  color: rgba(63, 58, 53, 0.8);
+  color: #4a423b;
 }
 
 .active-page-input {
@@ -405,7 +405,7 @@
 .empty-board {
   margin: 14px;
   font-weight: 700;
-  color: rgba(63, 58, 53, 0.8);
+  color: #4a423b;
 }
 
 .note-card {

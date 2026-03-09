@@ -78,7 +78,7 @@
 
 .auth-subtitle {
   margin: 2px 0 8px;
-  color: rgba(63, 58, 53, 0.82);
+  color: #4a423b;
   font-weight: 600;
   text-align: center;
 }
@@ -193,7 +193,7 @@
 .auth-divider {
   text-align: center;
   font-size: 13px;
-  color: rgba(63, 58, 53, 0.8);
+  color: #4a423b;
   position: relative;
   margin: 4px 0;
 }
